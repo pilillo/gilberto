@@ -21,7 +21,7 @@ class ProfilerTest extends FunSuite with DataFrameSuiteBase with Checkers {
     ))
     val rawData = spark.createDataFrame(rows)
 
-    val result = rawData.profile()(spark)
+    val result = rawData.profile()
     result.show()
   }
 

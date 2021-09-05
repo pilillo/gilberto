@@ -25,11 +25,12 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
   "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
 
+  "org.scalaj" % "scalaj-http_2.11" % "2.3.0",
+
   // https://mvnrepository.com/artifact/com.holdenkarau/spark-testing-base
   "com.holdenkarau" %% "spark-testing-base" % "2.4.5_0.14.0" % Test,
 
-
-// https://github.com/awslabs/deequ/issues/193
+  // https://github.com/awslabs/deequ/issues/193
   // https://github.com/awslabs/deequ/issues/216
   //"com.amazon.deequ" % "deequ" % "1.1.0-spark-3.0.0-scala-2.12",
   //"com.amazon.deequ" % "deequ" % "1.0.7_scala-2.12_spark-3.0.0"

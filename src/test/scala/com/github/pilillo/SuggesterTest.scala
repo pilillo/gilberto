@@ -31,7 +31,7 @@ class SuggesterTest extends FunSuite with DataFrameSuiteBase with Checkers {
     )).toDF("productName", "totalNumber", "status", "valuable")
 
     val arguments = TimeInterval.parse(Array[String]("--source", "b", "--destination", "c", "--from", "01/01/2020", "--to", "01/01/2020"))
-    val result = data.suggest()(spark)
+    val result = data.suggest()
     result.show()
   }
 

@@ -22,12 +22,13 @@ object BatchProfiler {
   }
 
   implicit class Profiler(df: DataFrame) {
-    def profile()(implicit spark : SparkSession): DataFrame = {
+    def profile(): DataFrame = {
 
       val result = ColumnProfilerRunner()
         .onData(df)
         .run()
 
+      val spark = df.sparkSession
       import spark.implicits._
 
       // result is a bunch of profiles, each for each data column

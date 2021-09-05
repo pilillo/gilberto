@@ -11,7 +11,10 @@ import scala.util.{Success, Try}
 object BatchSuggester {
   val log : Logger = Logger.getLogger(getClass.getName)
   implicit class Suggester(df: DataFrame) {
-    def suggest()(implicit spark : SparkSession): DataFrame = {
+    def suggest()
+    //           (implicit spark : SparkSession)
+    : DataFrame = {
+        val spark = df.sparkSession
         import spark.implicits._
           ConstraintSuggestionRunner()
             .onData(df)

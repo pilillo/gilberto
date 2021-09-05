@@ -25,7 +25,7 @@ object Gilberto {
         sys.exit(4)
       }
 
-      implicit val spark : SparkSession = SparkJob.get(s"Gilberto-${args(0)}")
+      val spark : SparkSession = SparkJob.get(s"Gilberto-${args(0)}")
       val input = spark.table(arguments.get.source).whereTimeIn(arguments.get.dateFrom, arguments.get.dateTo)
       input match {
         case Failure(e) => {
