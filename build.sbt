@@ -17,6 +17,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "com.github.scopt" %% "scopt" % "3.7.1",
   // https://www.scalacheck.org/
   "org.scalacheck" %% "scalacheck" % "1.14.1" % "test",
 
