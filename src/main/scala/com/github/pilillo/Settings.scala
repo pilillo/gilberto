@@ -37,17 +37,17 @@ object Settings {
     val APPROX_PERCENTILES = "approx_percentiles"
 
     // PROCESSING TIME
-    val PROC_YEAR = s"CURR_${YEAR}"
-    val PROC_MONTH = s"CURR_${MONTH}"
-    val PROC_DAY = s"CURR_${DAY}"
+    val PROC_YEAR = s"PROC_YEAR"
+    val PROC_MONTH = s"PROC_MONTH"
+    val PROC_DAY = s"PROC_DAY"
     // INTERVAL START DATE
-    val START_YEAR = s"START_${YEAR}"
-    val START_MONTH = s"START_${MONTH}"
-    val START_DAY = s"START_${DAY}"
+    val START_YEAR = s"START_YEAR"
+    val START_MONTH = s"START_MONTH"
+    val START_DAY = s"START_DAY"
     // INTERVAL END DATE
-    val END_YEAR = s"END_${YEAR}"
-    val END_MONTH = s"END_${MONTH}"
-    val END_DAY = s"END_${DAY}"
+    val END_YEAR = s"END_YEAR"
+    val END_MONTH = s"END_MONTH"
+    val END_DAY = s"END_DAY"
   }
 
   object Formats {

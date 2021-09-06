@@ -17,6 +17,8 @@ Gilberto is meant to be run as a step within a workflow manager (e.g. with the w
 
 The input arguments are handled using [scopt](https://github.com/scopt/scopt). Gilberto is expected a data source, an action (or pipeline) to perform on the data, as well as a time interval `(from, to)`, along with a destination file path.
 For the validator, Gilberto also expects a repository target, an endpoint or a file path, along with a code config file specifying the checks to perform on source data.
+For the profiler and the suggester, you may also specify a list of columns to use for partitioning the resulting dataframe,
+such as `PROC_YEAR,PROC_MONTH,PROC_DAY` to use processing date columns or respectively `START_*` and `END_*` for the beginning and end of the selected date interval.
 
 Specifically:
 ```bash
@@ -27,6 +29,7 @@ Specifically:
   -t, --to date                   End of the time interval
   -r, --repository target         Target folder or endpoint of the repository
   -c, --code-config-path path     Path of the file containing the checks to instruct the validator
+  -p, --partition-by columns      Columns to use to partition the resulting dataframe
 ```
 
 Here an example check file `checks.gibo`:
@@ -48,6 +51,6 @@ The former is basically a Concurrent Hashmap, while the second is a connector al
 Clearly, this has various drawbacks. Most of all, writing to a unique file blob all metrics does not scale and does not allow for querying from Presto and other engines alike.
 
 We provide the following metrics repositories:
-* `MastroMetricsRepository` pushing to the [Mastro](https://github.com/data-mill-cloud/mastro) catalogue and metrics repo; consequently allowing for lineage tracking and source discovery;
-* `QuerableMetricsRepository` based on the existing `FileSystemMetricsRepository` but writing DataFrames as partitioned parquet files instead of as a unique json file;
+* [`MastroMetricsRepository`](https://github.com/pilillo/gilberto/tree/master/src/main/scala/com/amazon/deequ/repository/mastro) pushing to the [Mastro](https://github.com/data-mill-cloud/mastro) catalogue and metrics repo; consequently allowing for lineage tracking and source discovery;
+* [`QuerableMetricsRepository`](https://github.com/pilillo/gilberto/tree/master/src/main/scala/com/amazon/deequ/repository/querable) based on the existing `FileSystemMetricsRepository` but writing DataFrames as partitioned parquet files instead of as a unique json file;
 
