@@ -35,6 +35,19 @@ object Settings {
     val SUM = "sum"
     val STD_DEV = "std_dev"
     val APPROX_PERCENTILES = "approx_percentiles"
+
+    // PROCESSING TIME
+    val PROC_YEAR = s"CURR_${YEAR}"
+    val PROC_MONTH = s"CURR_${MONTH}"
+    val PROC_DAY = s"CURR_${DAY}"
+    // INTERVAL START DATE
+    val START_YEAR = s"START_${YEAR}"
+    val START_MONTH = s"START_${MONTH}"
+    val START_DAY = s"START_${DAY}"
+    // INTERVAL END DATE
+    val END_YEAR = s"END_${YEAR}"
+    val END_MONTH = s"END_${MONTH}"
+    val END_DAY = s"END_${DAY}"
   }
 
   object Formats {
@@ -43,6 +56,8 @@ object Settings {
     val inputDateFormatter = DateTimeFormatter.ofPattern(inputDateFormat)
 
     val zoneId = ZoneId.of("UTC") // or: ZoneId.of("Europe/Oslo");
+
+    val PARTITIONBY_SPLIT_CHAR = "," // split by ,
   }
 
   object Configs {

@@ -26,6 +26,9 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
 
   "org.scalaj" % "scalaj-http_2.11" % "2.3.0",
+  "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+  "commons-validator" % "commons-validator" % "1.7",
 
   // https://mvnrepository.com/artifact/com.holdenkarau/spark-testing-base
   "com.holdenkarau" %% "spark-testing-base" % "2.4.5_0.14.0" % Test,

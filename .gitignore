@@ -4,3 +4,4 @@ target/*
 project/target/*
 *.crc
 *.json
+myrepo*

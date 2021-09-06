@@ -50,5 +50,23 @@ class DataFrameCheck extends FunSuite with DataFrameSuiteBase with Checkers {
     )
   }
 
+  test("all elems contained"){
+    val partitionedResult = Seq("mycol", "year", "month", "day")
+    val targetCols = Seq("year")
+
+    // there is a column in target that is not available in partitioned? NO - so target - partitioned is empty
+    assert(
+      targetCols.filterNot(partitionedResult.toSet).isEmpty
+    )
+
+    // append unavailable col to target
+    val targetCols2 = targetCols ++ Seq("wrong_col")
+    // yes - so target - partitioned is not empty
+    assert(
+      !targetCols2.filterNot(partitionedResult.toSet).isEmpty
+    )
+    // diff = { wrong_col } so it is not empty
+  }
+
 
 }
