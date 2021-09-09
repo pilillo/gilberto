@@ -3,6 +3,7 @@ package com.github.pilillo
 import com.github.pilillo.commons.{TimeInterval, TimeIntervalArguments, Utils}
 import org.apache.log4j.Logger
 import Helpers._
+import com.github.pilillo.pipelines.BatchAnomalyDetector._
 import com.github.pilillo.Settings.{Configs, Formats}
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import com.github.pilillo.pipelines.BatchValidator._
@@ -14,7 +15,6 @@ import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 object Gilberto {
-  val protocols = List("hdfs://", "s3://", "s3a://")
   val log: Logger = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
@@ -56,6 +56,14 @@ object Gilberto {
             }
             val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
             df.validate(codeConfig, arguments.get.repository)
+          }
+          case "detect" => {
+            if (arguments.get.codeConfigPath == null) {
+              log.error("No path provided for code config")
+              sys.exit(5)
+            }
+            val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
+            df.detect(codeConfig, arguments.get.repository)
           }
           case _ => {
             log.error(s"No pipeline named ${arguments.get.action}")

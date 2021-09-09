@@ -10,6 +10,7 @@ Specifically, you can instantiate:
 * `profile` to perform profiling of any Spark DataFrame - loaded from a Hive table
 * `suggest` to perform constraint suggestion based on selected data distribution
 * `validate` to perform a data quality validation step, based on an input ***check*** file
+* `detect` to perform anomaly detection, based on an imput ***strategy*** file
 
 Gilberto is meant to be run as a step within a workflow manager (e.g. with the workflow failing in case of data inconsistencies), pulling data from a remote Hadoop/Hive cluster or S3/Presto datalake and pushing data to specific MetricsRepositories.
 
@@ -32,7 +33,7 @@ Specifically:
   -p, --partition-by columns      Columns to use to partition the resulting dataframe
 ```
 
-Here an example check file `checks.gibo`:
+Here an example check file `checks.gibo` for the `validate` step:
 ```scala
 import com.amazon.deequ.checks.{Check, CheckLevel, CheckStatus}
 Seq(
@@ -43,6 +44,18 @@ Seq(
 ```
 
 The file is interpreted as Scala code using reflection and applied as Checks (see [`addChecks`](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/VerificationRunBuilder.scala#L86)) on a Validator instance.
+
+Similarly, here is an example strategy file `strategy.gibo` for the `detect` step:
+```scala
+import com.amazon.deequ.anomalydetection._
+import com.amazon.deequ.analyzers._
+(
+  RelativeRateOfChangeStrategy(maxRateIncrease = Some(2.0)),
+  Size()
+)
+```
+which is interpreted as tuple of kind `AnomalyDetectionStrategy, Analyzer[S, DoubleMetric]` and applied to a Detector instance (see [anomaly detection example](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/examples/anomaly_detection_example.md)).
+
 
 ## Metrics repositories
 

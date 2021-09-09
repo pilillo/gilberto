@@ -1,7 +1,7 @@
 package com.github.pilillo.commons
 
-import com.github.pilillo.Gilberto.{getClass, protocols}
 import com.github.pilillo.Settings.{ColNames, Configs, Formats}
+import org.apache.commons.validator.routines.UrlValidator
 import org.apache.log4j.Logger
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SaveMode}
@@ -81,4 +81,7 @@ object Utils {
             result.coalesce(Configs.NUM_TARGET_PARTITIONS).write.mode(SaveMode.Overwrite)
         }
     }
+
+    lazy val schemes = Array("http","https")
+    lazy val urlValidator = new UrlValidator(schemes, null, UrlValidator.ALLOW_LOCAL_URLS)
 }

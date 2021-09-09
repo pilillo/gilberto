@@ -4,24 +4,19 @@ import com.amazon.deequ.VerificationSuite
 import com.amazon.deequ.checks.Check
 import com.amazon.deequ.constraints.ConstraintStatus
 import com.amazon.deequ.repository.ResultKey
-import com.amazon.deequ.repository.fs.FileSystemMetricsRepository
 import com.amazon.deequ.repository.mastro.MastroMetricsRepository
 import com.amazon.deequ.repository.querable.QuerableMetricsRepository
-import com.github.pilillo.Gilberto.protocols
 import com.github.pilillo.Helpers._
-import com.github.pilillo.commons.TimeIntervalArguments
+import com.github.pilillo.commons.Utils
 import org.apache.commons.validator.routines.UrlValidator
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
-import scala.io.Source
 import scala.reflect.runtime.currentMirror
 import scala.tools.reflect.ToolBox
 
 object BatchValidator {
   val log : Logger = Logger.getLogger(getClass.getName)
-  val schemes = Array("http","https")
-  val urlValidator = new UrlValidator(schemes, null, UrlValidator.ALLOW_LOCAL_URLS)
 
   def getChecks(codeConfig : String) : Seq[Check] = {
     val toolbox = currentMirror.mkToolBox()
@@ -32,20 +27,6 @@ object BatchValidator {
   }
 
   implicit class Validator(df: DataFrame) {
-
-    def loadCodeConfig(codeConfigPath : String) : String = {
-      // check if path contains any of those in the protocols list, if so use spark to load the file
-      if (protocols.exists(codeConfigPath.contains(_))) {
-        // load from remote FS - e.g. on an hadoop FS
-        df.sparkSession
-          //.read.text(arguments.get.codeConfigPath)
-          .sparkContext.textFile(codeConfigPath)
-          .collect().mkString("\n")
-      } else {
-        // otherwise load as local file - e.g. on k8s we can mount a volume
-        Source.fromFile(codeConfigPath).getLines().mkString("\n")
-      }
-    }
 
     def validate(codeConfig : String, repository : String): Int = {
 
@@ -63,7 +44,7 @@ object BatchValidator {
         verifier
       } else {
         // if a valid url is provided, use the mastro repo - otherwise save to file system
-        val repo = if(urlValidator.isValid(repository)){
+        val repo = if(Utils.urlValidator.isValid(repository)){
           MastroMetricsRepository(df.sparkSession, endpoint = repository)
         }else{
           //FileSystemMetricsRepository(df.sparkSession, metricsRepo)

@@ -10,6 +10,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
 import java.time.{LocalDate, ZoneId}
+import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 object Helpers {
@@ -49,6 +50,22 @@ object Helpers {
   def version() : DataFrame = {
    val currentDateTime = Utils.getCurrentDateTime()
    df.withColumn(ColNames.VERSION, lit(Utils.formatDate(currentDateTime)))
+  }
+
+  val protocols = List("hdfs://", "s3://", "s3a://")
+
+  def loadCodeConfig(codeConfigPath : String) : String = {
+   // check if path contains any of those in the protocols list, if so use spark to load the file
+   if (protocols.exists(codeConfigPath.contains(_))) {
+    // load from remote FS - e.g. on an hadoop FS
+    df.sparkSession
+      //.read.text(arguments.get.codeConfigPath)
+      .sparkContext.textFile(codeConfigPath)
+      .collect().mkString("\n")
+   } else {
+    // otherwise load as local file - e.g. on k8s we can mount a volume
+    Source.fromFile(codeConfigPath).getLines().mkString("\n")
+   }
   }
  }
 
