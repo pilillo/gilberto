@@ -57,7 +57,13 @@ object Gilberto {
     }
     log.info(s"Running ${arguments.get.action}")
     val spark: SparkSession = SparkJob.get(s"Gilberto-${args(0)}")
-    val input = spark.table(arguments.get.source).whereTimeIn(arguments.get.dateFrom, arguments.get.dateTo)
+    // assuming either Hive tables or paths
+    val df = if( spark.catalog.tableExists(arguments.get.source))
+      spark.table(arguments.get.source)
+    else spark.read.parquet(arguments.get.source)
+    // filter input by time interval
+    val input = df.whereTimeIn(arguments.get.dateFrom, arguments.get.dateTo)
+
     val exitCode = input match {
       case Failure(e) => {
         log.error(e)

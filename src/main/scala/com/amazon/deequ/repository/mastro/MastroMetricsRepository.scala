@@ -61,7 +61,7 @@ object MastroMetricsRepository {
         metrics = List(analysisResult)
       )
     )
-    println(mastroResult)
+
     //println(serializedAnalysisResult)
     /*   [
           {

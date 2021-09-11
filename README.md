@@ -16,7 +16,7 @@ Gilberto is meant to be run as a step within a workflow manager (e.g. with the w
 
 ## Usage
 
-The input arguments are handled using [scopt](https://github.com/scopt/scopt). Gilberto is expected a data source, an action (or pipeline) to perform on the data, as well as a time interval `(from, to)`, along with a destination file path.
+The input arguments are handled using [scopt](https://github.com/scopt/scopt). Gilberto is expected a data source (either a Hive table or a path), an action (or pipeline) to perform on the data, as well as a time interval `(from, to)`, along with a destination file path.
 For the validator, Gilberto also expects a repository target, an endpoint or a file path, along with a code config file specifying the checks to perform on source data.
 For the profiler and the suggester, you may also specify a list of columns to use for partitioning the resulting dataframe,
 such as `PROC_YEAR,PROC_MONTH,PROC_DAY` to use processing date columns or respectively `START_*` and `END_*` for the beginning and end of the selected date interval.

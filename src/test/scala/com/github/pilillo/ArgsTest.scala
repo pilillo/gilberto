@@ -123,8 +123,6 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
     assert("1", ms.version)
 
     val msString = MastroSerde.serialize(ms)
-    //print(msString.trim())
-    //print(input.trim())
-    //assert(input.trim() == msString.trim())
+    assert(input.replaceAll("\\s", "") == msString.replaceAll("\\s", ""))
   }
 }
