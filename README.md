@@ -2,6 +2,8 @@
 
 A nice guy you may rely on for your Data Quality;
 
+![Gilberto](img/gilberto_wide.png)
+
 ## Pipelines
 
 Gilberto uses [AWS Deequ](https://github.com/awslabs/deequ) and [Apache Spark](https://spark.apache.org/) at its core.
