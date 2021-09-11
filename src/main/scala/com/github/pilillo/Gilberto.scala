@@ -1,21 +1,53 @@
 package com.github.pilillo
 
+import com.amazon.deequ.repository.ResultKey
+import com.github.pilillo.Helpers._
+import com.github.pilillo.Settings.{ColNames, Formats}
+import com.github.pilillo.commons.Utils.{convertToLocalDateTimeViaInstant, getCurrentDateTime}
 import com.github.pilillo.commons.{TimeInterval, TimeIntervalArguments, Utils}
-import org.apache.log4j.Logger
-import Helpers._
 import com.github.pilillo.pipelines.BatchAnomalyDetector._
-import com.github.pilillo.Settings.{Configs, Formats}
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
-import com.github.pilillo.pipelines.BatchValidator._
-import com.github.pilillo.pipelines.BatchSuggester._
 import com.github.pilillo.pipelines.BatchProfiler._
+import com.github.pilillo.pipelines.BatchSuggester._
+import com.github.pilillo.pipelines.BatchValidator._
+import org.apache.log4j.Logger
+import org.apache.spark.sql.SparkSession
 
-import java.nio.file.Paths
-import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import scala.collection.immutable.ListMap
+import scala.util.{Failure, Success}
 
 object Gilberto {
   val log: Logger = Logger.getLogger(getClass.getName)
+
+  def getResultKey(arguments : TimeIntervalArguments) : ResultKey = {
+    val dateTime = getCurrentDateTime()
+    val processingDate = convertToLocalDateTimeViaInstant(dateTime)
+
+    // ListMap implements an immutable map using a list-based data structure, and thus preserves insertion order.
+    val targetCols = arguments.partitionBy.split(Formats.PARTITIONBY_SPLIT_CHAR)
+
+    val tags = targetCols.toList.map(
+      col => col match {
+        /*
+        // interval start date
+        case ColNames.START_YEAR =>
+        case ColNames.START_MONTH =>
+        case ColNames.START_DAY =>
+        // interval end date
+        case ColNames.END_YEAR =>
+        case ColNames.END_MONTH =>
+        case ColNames.END_DAY =>
+         */
+        // processing time - date of running the pipeline
+        case ColNames.PROC_YEAR => (col, "%04d".format(processingDate.getYear))
+        case ColNames.PROC_MONTH => (col, "%02d".format(processingDate.getMonthValue))
+        case ColNames.PROC_DAY => (col, "%02d".format(processingDate.getDayOfMonth))
+        // skip uknown ones
+        case _ => null
+      }
+    ).filter(_ != null)
+
+    ResultKey(dateTime.getTime, ListMap[String, String](tags : _*))
+  }
 
   def main(args: Array[String]): Unit = {
     val arguments = TimeInterval.parse(args)
@@ -26,15 +58,13 @@ object Gilberto {
     log.info(s"Running ${arguments.get.action}")
     val spark: SparkSession = SparkJob.get(s"Gilberto-${args(0)}")
     val input = spark.table(arguments.get.source).whereTimeIn(arguments.get.dateFrom, arguments.get.dateTo)
-    input match {
+    val exitCode = input match {
       case Failure(e) => {
         log.error(e)
-        sys.exit(4)
+        4
       }
       case Success(df) => {
-        // write results to destination/partition=value/
-
-        val exitCode = arguments.get.action match {
+        arguments.get.action match {
           case "profile" => {
             val result = df.profile()
             Utils
@@ -52,27 +82,39 @@ object Gilberto {
           case "validate" => {
             if (arguments.get.codeConfigPath == null) {
               log.error("No path provided for code config")
-              sys.exit(5)
+              5
+            }else{
+              val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
+              if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
+                log.error("No repository specified")
+                5
+              }else{
+                df.validate(codeConfig, df.getRepository(arguments.get.repository), getResultKey(arguments.get))
+              }
             }
-            val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
-            df.validate(codeConfig, arguments.get.repository)
           }
           case "detect" => {
             if (arguments.get.codeConfigPath == null) {
               log.error("No path provided for code config")
-              sys.exit(5)
+              5
+            }else{
+              val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
+              if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
+                log.error("No repository specified")
+                5
+              }else{
+                df.detect(codeConfig, df.getRepository(arguments.get.repository), getResultKey(arguments.get))
+              }
             }
-            val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
-            df.detect(codeConfig, arguments.get.repository)
           }
           case _ => {
             log.error(s"No pipeline named ${arguments.get.action}")
             2
           }
         }
-        if (exitCode != 0) sys.exit(exitCode)
       }
     }
+    if (exitCode != 0) sys.exit(exitCode)
   }
 
 }

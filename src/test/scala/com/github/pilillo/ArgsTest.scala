@@ -7,6 +7,7 @@ import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
 class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
+
   test("input arguments parsing"){
     val args1 = Array[String](
       "--action", "test",
@@ -31,6 +32,23 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
     val arguments2 = TimeInterval.parse(args2)
     assert( "http://localhost", arguments2.get.repository)
     assert( "year,month,day", arguments2.get.partitionBy)
+  }
+
+  test("resultkey"){
+    val args1 = Array[String](
+      "--action", "test",
+      "--source", "b",
+      "--destination", "c",
+      "--from", "01/01/2020",
+      "--to", "01/01/2020",
+      "--partition-by", "PROC_YEAR,PROC_MONTH,PROC_DAY"
+    )
+    val arguments = TimeInterval.parse(args1)
+    val resultKey = Gilberto.getResultKey(arguments.get)
+
+    assert("PROC_YEAR", resultKey.tags.toList(0)._1)
+    assert("PROC_MONTH", resultKey.tags.toList(1)._1)
+    assert("PROC_DAY", resultKey.tags.toList(2)._1)
   }
 
   test("url validator"){

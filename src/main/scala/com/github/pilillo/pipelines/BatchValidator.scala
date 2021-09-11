@@ -3,7 +3,7 @@ package com.github.pilillo.pipelines
 import com.amazon.deequ.VerificationSuite
 import com.amazon.deequ.checks.Check
 import com.amazon.deequ.constraints.ConstraintStatus
-import com.amazon.deequ.repository.ResultKey
+import com.amazon.deequ.repository.{MetricsRepository, ResultKey}
 import com.amazon.deequ.repository.mastro.MastroMetricsRepository
 import com.amazon.deequ.repository.querable.QuerableMetricsRepository
 import com.github.pilillo.Helpers._
@@ -28,11 +28,10 @@ object BatchValidator {
 
   implicit class Validator(df: DataFrame) {
 
-    def validate(codeConfig : String, repository : String): Int = {
-
-      // todo: use current date in tags?
-      val tags = Map[String,String]()
-      val resultKey = ResultKey(System.currentTimeMillis(), tags)
+    def validate(codeConfig : String,
+                 repository : MetricsRepository,
+                 resultKey : ResultKey = ResultKey(System.currentTimeMillis(), Map[String,String]())
+                ): Int = {
 
       val verifier = VerificationSuite()
         .onData(df)
@@ -40,18 +39,9 @@ object BatchValidator {
           getChecks(codeConfig)
         )
 
-      val verifierWithRepo = if(repository == null || repository.isEmpty){
-        verifier
-      } else {
-        // if a valid url is provided, use the mastro repo - otherwise save to file system
-        val repo = if(Utils.urlValidator.isValid(repository)){
-          MastroMetricsRepository(df.sparkSession, endpoint = repository)
-        }else{
-          //FileSystemMetricsRepository(df.sparkSession, metricsRepo)
-          QuerableMetricsRepository(df.sparkSession, path = repository)
-        }
-        verifier.useRepository(repo).saveOrAppendResult(resultKey)
-      }
+      // repository is optional for the data validator
+      val verifierWithRepo = if(repository == null) verifier
+      else verifier.useRepository(repository).saveOrAppendResult(resultKey)
 
       // run verification
       val verificationResult = verifierWithRepo.run()
@@ -60,15 +50,11 @@ object BatchValidator {
         log.info("The data passed the test, everything is fine!")
         0
       } else {
-
-        val resultsForAllConstraints = verificationResult.checkResults
+        verificationResult.checkResults
           .flatMap { case (_, checkResult) => checkResult.constraintResults }
-
-        // get all failed constraints
-        resultsForAllConstraints
+          // get all failed constraints
           .filter { _.status != ConstraintStatus.Success }
           .foreach { result => log.error(s"${result.constraint}: ${result.message.get}") }
-
         4
       }
     }

@@ -3,7 +3,7 @@ package com.amazon.deequ.repository.querable
 import com.amazon.deequ.analyzers.Analyzer
 import com.amazon.deequ.analyzers.runners.AnalyzerContext
 import com.amazon.deequ.metrics.Metric
-import com.amazon.deequ.repository.{AnalysisResult, AnalysisResultSerde, MetricsRepositoryMultipleResultsLoader}
+import com.amazon.deequ.repository.{AnalysisResult, AnalysisResultSerde, MetricsRepositoryMultipleResultsLoader, ResultKey}
 import org.apache.spark.sql.SparkSession
 
 class QuerableMetricsMultipleResultsLoader (session: SparkSession, path: String)
@@ -59,20 +59,17 @@ class QuerableMetricsMultipleResultsLoader (session: SparkSession, path: String)
    */
   override def get(): Seq[AnalysisResult] = {
     // 1. load results from repository
-    val results = QuerableMetricsRepository
-      .read(session, path, tagValues)
-      // deserialize content from string result
-      .map { content => AnalysisResultSerde.deserialize(content) }
-      .getOrElse(Seq.empty)
+    val results = QuerableMetricsRepository.read(session, path, tagValues).getOrElse(session.emptyDataFrame)
 
-    // 2. enforce predicates to select only certain results
+    // 2. enforce predicates to select only certain results (this approach makes only sense with pred pushdown)
     results
-      .filter { result => after.isEmpty || after.get <= result.resultKey.dataSetDate }
-      .filter { result => before.isEmpty || result.resultKey.dataSetDate <= before.get }
-      .filter { result =>
-        tagValues.isEmpty ||
-          tagValues.get.toSet.subsetOf(result.resultKey.tags.toSet)
-      }
+      .filter(result => {
+        after.isEmpty || after.get <= result.getAs[Long]("dataset_date")
+      })
+      .filter(result => {
+        before.isEmpty || result.getAs[Long]("dataset_date") <= before.get
+      })
+      /*
       .map { analysisResult =>
         val requestedMetrics = analysisResult
           .analyzerContext
@@ -80,5 +77,21 @@ class QuerableMetricsMultipleResultsLoader (session: SparkSession, path: String)
           .filterKeys(analyzer => forAnalyzers.isEmpty || forAnalyzers.get.contains(analyzer))
         AnalysisResult(analysisResult.resultKey, AnalyzerContext(requestedMetrics))
       }.toSeq
+      */
+      /*
+      .map(
+        row => {
+          //{"entity":"Column","instance":"numViews","name":"Minimum","value":0,"dataset_date":1631313748911}
+          val resultKey = ResultKey(dataSetDate = row.getAs[Long]("dataset_date"))
+
+          val metricMap = Map[Analyzer[_, Metric[_]], Metric[_]](
+          )
+          val analyzerContext = AnalyzerContext(metricMap)
+          AnalysisResult(resultKey, analyzerContext)
+        }
+      )
+      */
+
+    Seq.empty
   }
 }

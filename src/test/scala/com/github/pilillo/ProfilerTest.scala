@@ -24,5 +24,4 @@ class ProfilerTest extends FunSuite with DataFrameSuiteBase with Checkers {
     val result = rawData.profile()
     result.show()
   }
-
 }

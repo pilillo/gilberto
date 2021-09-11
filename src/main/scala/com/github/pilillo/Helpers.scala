@@ -3,6 +3,9 @@ package com.github.pilillo
 import com.amazon.deequ.VerificationResult
 import com.amazon.deequ.checks.CheckStatus
 import com.amazon.deequ.constraints._
+import com.amazon.deequ.repository.MetricsRepository
+import com.amazon.deequ.repository.mastro.MastroMetricsRepository
+import com.amazon.deequ.repository.querable.QuerableMetricsRepository
 import com.github.pilillo.Settings.{ColNames, Formats}
 import com.github.pilillo.commons.Utils
 import org.apache.log4j.Logger
@@ -65,6 +68,16 @@ object Helpers {
    } else {
     // otherwise load as local file - e.g. on k8s we can mount a volume
     Source.fromFile(codeConfigPath).getLines().mkString("\n")
+   }
+  }
+
+  def getRepository(repository : String) : MetricsRepository = {
+   // if a valid url is provided, use the mastro repo - otherwise save to file system
+   if(Utils.urlValidator.isValid(repository)){
+    MastroMetricsRepository(df.sparkSession, endpoint = repository)
+   }else{
+    //FileSystemMetricsRepository(df.sparkSession, metricsRepo)
+    QuerableMetricsRepository(df.sparkSession, path = repository)
    }
   }
  }

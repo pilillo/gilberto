@@ -15,10 +15,7 @@ class MastroMetricsRepository (session: SparkSession, endpoint: String) extends 
     val result = AnalysisResult(resultKey, analyzerContextWithSuccessfulValues)
 
     // put metric to mastro
-    MastroMetricsRepository.putToMastro(session, endpoint,
-      //analyzerContextWithSuccessfulValues
-      result
-    )
+    MastroMetricsRepository.putToMastro(session, endpoint, result)
   }
 
   override def loadByKey(resultKey: ResultKey): Option[AnalyzerContext] = {
@@ -113,7 +110,7 @@ object MastroMetricsRepository {
 
     // get on endpoint using the tags as parameters
     val response = Http(url = endpoint)
-        .params(tagValues.getOrElse(Map[String,String]()))
+        .params(tagValues.getOrElse(Map.empty))
         .header("Charset", CHARSET_NAME)
         .option(HttpOptions.readTimeout(READ_TIMEOUT))
         .asString
