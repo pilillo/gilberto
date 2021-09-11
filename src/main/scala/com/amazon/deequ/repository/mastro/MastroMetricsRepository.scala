@@ -2,9 +2,10 @@ package com.amazon.deequ.repository.mastro
 
 import com.amazon.deequ.analyzers.runners.AnalyzerContext
 import com.amazon.deequ.repository.{AnalysisResult, AnalysisResultSerde, AnalysisResultSerializer, AnalyzerSerializer, MetricsRepository, MetricsRepositoryMultipleResultsLoader, ResultKey}
-
 import org.apache.spark.sql.SparkSession
 import scalaj.http.{Http, HttpOptions}
+
+import scala.collection.Map
 
 class MastroMetricsRepository (session: SparkSession, endpoint: String) extends MetricsRepository{
   override def save(resultKey: ResultKey, analyzerContext: AnalyzerContext): Unit = {
@@ -49,7 +50,18 @@ object MastroMetricsRepository {
                                   analysisResult : AnalysisResult) : (Int, String) = {
     //val successMetrics = AnalyzerContext.successMetricsAsJson(analyzerContext)
     //println(successMetrics)
+
     val serializedAnalysisResult = AnalysisResultSerde.serialize(Seq(analysisResult))
+    val mastroResult = MastroSerde.serialize(
+      MetricSet(
+        name = "",
+        version = "",
+        description = "",
+        labels = analysisResult.resultKey.tags,
+        metrics = List(analysisResult)
+      )
+    )
+    println(mastroResult)
     //println(serializedAnalysisResult)
     /*   [
           {
@@ -108,9 +120,11 @@ object MastroMetricsRepository {
     val jsonVal = gson.toJson(tagValues)
     */
 
+    val p = tagValues.getOrElse(Map[String, String]())
     // get on endpoint using the tags as parameters
     val response = Http(url = endpoint)
-        .params(tagValues.getOrElse(Map.empty))
+        //.params(Map[String, String]())
+        //.params(p)
         .header("Charset", CHARSET_NAME)
         .option(HttpOptions.readTimeout(READ_TIMEOUT))
         .asString

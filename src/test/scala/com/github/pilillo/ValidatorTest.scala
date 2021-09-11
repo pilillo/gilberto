@@ -1,6 +1,8 @@
 package com.github.pilillo
 
 import com.amazon.deequ.checks.{Check, CheckLevel}
+import com.amazon.deequ.repository.fs.FileSystemMetricsRepository
+import com.amazon.deequ.repository.mastro.MastroMetricsRepository
 import com.github.pilillo.pipelines.BatchValidator._
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.FunSuite
@@ -76,8 +78,7 @@ class ValidatorTest extends FunSuite with DataFrameSuiteBase with Checkers {
     result = data.validate(
       codeConfig,
       new InMemoryMetricsRepository()
-      //"myrepo"
-      //"http://localhost",
+      //new FileSystemMetricsRepository(spark, "myrepo")
     )
     assert(4, result)
 
@@ -131,4 +132,6 @@ class ValidatorTest extends FunSuite with DataFrameSuiteBase with Checkers {
     )
     new Directory(new File("test-repo.parquet")).deleteRecursively()
   }
+
+  //new MastroMetricsRepository(spark, "http://localhost")
 }

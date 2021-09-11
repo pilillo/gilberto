@@ -1,8 +1,9 @@
 package com.github.pilillo
 
+import com.amazon.deequ.repository.mastro.MastroSerde
 import com.github.pilillo.commons.TimeInterval
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import org.apache.commons.validator.routines.{DomainValidator, UrlValidator}
+import org.apache.commons.validator.routines.UrlValidator
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 
@@ -63,5 +64,67 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
     assert(
       urlValidator.isValid("http://localhost")
     )
+  }
+
+  test("metricset serde"){
+
+    val input =
+      """
+        |{
+        |"name" : "gigio",
+        |"version" : "1",
+        |"description" : "test ms",
+        |"labels":{"year":"2021"},
+        |"metrics":
+        |[
+        |  {
+        |    "resultKey": {
+        |      "dataSetDate": 1630876393300,
+        |      "tags": {}
+        |    },
+        |    "analyzerContext": {
+        |      "metricMap": [
+        |        {
+        |          "analyzer": {
+        |            "analyzerName": "Size"
+        |          },
+        |          "metric": {
+        |            "metricName": "DoubleMetric",
+        |            "entity": "Dataset",
+        |            "instance": "*",
+        |            "name": "Size",
+        |            "value": 5.0
+        |          }
+        |        },
+        |        {
+        |          "analyzer": {
+        |            "analyzerName": "Minimum",
+        |            "column": "numViews"
+        |          },
+        |          "metric": {
+        |            "metricName": "DoubleMetric",
+        |            "entity": "Column",
+        |            "instance": "numViews",
+        |            "name": "Minimum",
+        |            "value": 0.0
+        |          }
+        |        }
+        |      ]
+        |    }
+        |  }
+        |]
+        |}
+        |""".stripMargin
+
+
+    val ms = MastroSerde.deserialize(input)
+
+    assert("gigio", ms.name)
+    assert("1", ms.version)
+
+    val msString = MastroSerde.serialize(ms)
+    //print(msString.trim())
+    //print(input.trim())
+    //assert(input.trim() == msString.trim())
   }
 }
