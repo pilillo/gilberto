@@ -1,7 +1,7 @@
 package com.amazon.deequ.repository.mastro
 
 import com.amazon.deequ.analyzers.runners.AnalyzerContext
-import com.amazon.deequ.repository.{AnalysisResult, AnalysisResultSerde, AnalysisResultSerializer, AnalyzerSerializer, MetricsRepository, MetricsRepositoryMultipleResultsLoader, ResultKey}
+import com.amazon.deequ.repository.{AnalysisResult, MetricsRepository, MetricsRepositoryMultipleResultsLoader, ResultKey}
 import org.apache.spark.sql.SparkSession
 import scalaj.http.{Http, HttpOptions}
 
@@ -20,16 +20,14 @@ class MastroMetricsRepository (session: SparkSession, endpoint: String) extends 
   }
 
   override def loadByKey(resultKey: ResultKey): Option[AnalyzerContext] = {
-    /*
-    Option(
-      resultsRepository.get(resultKey)
-
-    ).map { _.analyzerContext }
-     */
+    // get a loader builder to get analysisresults
     load()
-      // todo: add search - e.g. by tags
-
-      .get().find(_.resultKey == resultKey).map(_.analyzerContext)
+      // get analysisresult record with same dataset date and tags (i.e. result key)
+      //.withTagValues(resultKey.tags)
+      .get()
+      .find(_.resultKey == resultKey)
+      // extract analyzer context only
+      .map(_.analyzerContext)
   }
 
   /** Get a builder class to construct a loading query to get AnalysisResults */
@@ -48,10 +46,7 @@ object MastroMetricsRepository {
   private[mastro] def putToMastro(session: SparkSession,
                                   endpoint: String,
                                   analysisResult : AnalysisResult) : (Int, String) = {
-    //val successMetrics = AnalyzerContext.successMetricsAsJson(analyzerContext)
-    //println(successMetrics)
 
-    val serializedAnalysisResult = AnalysisResultSerde.serialize(Seq(analysisResult))
     val mastroResult = MastroSerde.serialize(
       MetricSet(
         name = "",
@@ -62,47 +57,8 @@ object MastroMetricsRepository {
       )
     )
 
-    //println(serializedAnalysisResult)
-    /*   [
-          {
-            "resultKey": {
-              "dataSetDate": 1630876393300,
-              "tags": {}
-            },
-            "analyzerContext": {
-              "metricMap": [
-                {
-                  "analyzer": {
-                    "analyzerName": "Size"
-                  },
-                  "metric": {
-                    "metricName": "DoubleMetric",
-                    "entity": "Dataset",
-                    "instance": "*",
-                    "name": "Size",
-                    "value": 5.0
-                  }
-                },
-                {
-                  "analyzer": {
-                    "analyzerName": "Minimum",
-                    "column": "numViews"
-                  },
-                  "metric": {
-                    "metricName": "DoubleMetric",
-                    "entity": "Column",
-                    "instance": "numViews",
-                    "name": "Minimum",
-                    "value": 0.0
-                  }
-                }
-              ]
-            }
-          }
-        ] */
-
     val response = Http(endpoint)
-      .put(serializedAnalysisResult)
+      .put(mastroResult)
       .header("Content-Type", "application/json")
       .header("Charset", CHARSET_NAME)
       .option(HttpOptions.readTimeout(READ_TIMEOUT))
@@ -115,16 +71,9 @@ object MastroMetricsRepository {
                                        endpoint: String,
                                        tagValues: Option[Map[String, String]]
                                       ): Option[String] = {
-    /*
-    val gson = new GsonBuilder().setPrettyPrinting().create()
-    val jsonVal = gson.toJson(tagValues)
-    */
-
-    val p = tagValues.getOrElse(Map[String, String]())
     // get on endpoint using the tags as parameters
     val response = Http(url = endpoint)
-        //.params(Map[String, String]())
-        //.params(p)
+        .params(tagValues.getOrElse(Map.empty).toSeq)
         .header("Charset", CHARSET_NAME)
         .option(HttpOptions.readTimeout(READ_TIMEOUT))
         .asString

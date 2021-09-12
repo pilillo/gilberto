@@ -60,6 +60,7 @@ class MastroMetricsRepositoryMultipleResultsLoader(session: SparkSession, endpoi
   override def get(): Seq[AnalysisResult] = {
     // 1. load results from repository
     val results = MastroMetricsRepository
+      // query mastro at endpoint, using specified tagValues
       .getFromMastro(session, endpoint, tagValues)
       // deserialize content from string result
       .map{ content => AnalysisResultSerde.deserialize(content)}
