@@ -63,11 +63,18 @@ class MastroMetricsRepositoryMultipleResultsLoader(session: SparkSession, endpoi
       // query mastro at endpoint, using specified tagValues
       .getFromMastro(session, endpoint, tagValues)
       // deserialize content from string result
-      .map{ content => AnalysisResultSerde.deserialize(content)}
+      .map{ content =>
+        //AnalysisResultSerde.deserialize(content)
+        //MastroSerde.deserialize(content)
+        MastroSerde.deserializeMultiple(content)
+      }
       .getOrElse(Seq.empty)
 
     // 2. enforce predicates to select only certain results
     results
+      // get analysis result and use that for back-compatibility with rest of code
+      .flatMap( metricSet => metricSet.metrics)
+      // existing checks
       .filter { result => after.isEmpty || after.get <= result.resultKey.dataSetDate }
       .filter { result => before.isEmpty || result.resultKey.dataSetDate <= before.get }
       .filter { result => tagValues.isEmpty ||

@@ -119,4 +119,20 @@ object MastroSerde {
       new TypeToken[MetricSet]() {}.getType)
       .asInstanceOf[MetricSet]
   }
+
+  def deserializeMultiple(metricSets : String) : Seq[MetricSet] = {
+    val gson = new GsonBuilder()
+      .registerTypeAdapter(classOf[MetricSet], MetricSetDeserializer)
+      .registerTypeAdapter(classOf[ResultKey], ResultKeyDeserializer)
+      .registerTypeAdapter(classOf[AnalysisResult], AnalysisResultDeserializer)
+      .registerTypeAdapter(classOf[AnalyzerContext], AnalyzerContextDeserializer)
+      .registerTypeAdapter(classOf[Analyzer[State[_], Metric[_]]], AnalyzerDeserializer)
+      .registerTypeAdapter(classOf[Metric[_]], MetricDeserializer)
+      .registerTypeAdapter(classOf[Distribution], DistributionDeserializer)
+      .create
+
+    gson.fromJson(metricSets,
+      new TypeToken[JList[MetricSet]]() {}.getType)
+      .asInstanceOf[JArrayList[MetricSet]].asScala
+  }
 }
