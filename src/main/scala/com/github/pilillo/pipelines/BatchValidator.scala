@@ -4,11 +4,7 @@ import com.amazon.deequ.VerificationSuite
 import com.amazon.deequ.checks.Check
 import com.amazon.deequ.constraints.ConstraintStatus
 import com.amazon.deequ.repository.{MetricsRepository, ResultKey}
-import com.amazon.deequ.repository.mastro.MastroMetricsRepository
-import com.amazon.deequ.repository.querable.QuerableMetricsRepository
 import com.github.pilillo.Helpers._
-import com.github.pilillo.commons.Utils
-import org.apache.commons.validator.routines.UrlValidator
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
