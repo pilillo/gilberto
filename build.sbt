@@ -2,11 +2,7 @@ organization := "com.github.pilillo"
 name := "gilberto"
 version := "0.1"
 
-//scalaVersion := "2.12.0"
-// https://github.com/awslabs/deequ/issues/193
 scalaVersion := "2.11.0"
-
-//val sparkVersion = "3.0.1"
 val sparkVersion = "2.4.7"
 
 resolvers ++= Seq(
@@ -18,28 +14,20 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "3.7.1",
-  // https://www.scalacheck.org/
   "org.scalacheck" %% "scalacheck" % "1.14.1" % "test",
 
   "org.apache.spark"  %% "spark-core" % sparkVersion % "provided",
   "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
   "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
 
-  "org.scalaj" % "scalaj-http_2.11" % "2.3.0",
+  "org.scalaj" %% "scalaj-http" % "2.4.2",
   "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "commons-validator" % "commons-validator" % "1.7",
 
   // https://mvnrepository.com/artifact/com.holdenkarau/spark-testing-base
   "com.holdenkarau" %% "spark-testing-base" % "2.4.5_0.14.0" % Test,
-
-  // https://github.com/awslabs/deequ/issues/193
-  // https://github.com/awslabs/deequ/issues/216
-  //"com.amazon.deequ" % "deequ" % "1.1.0-spark-3.0.0-scala-2.12",
-  //"com.amazon.deequ" % "deequ" % "1.0.7_scala-2.12_spark-3.0.0"
-  //"com.amazon.deequ" % "deequ" % "1.0.7_scala-2.12_spark-3.0.0" % "provided" exclude("org.apache.spark", "spark-core_2.11") exclude("org.apache.spark", "spark-sql_2.11")
   "com.amazon.deequ" % "deequ" % "1.1.0_spark-2.4-scala-2.11"
-  //"com.amazon.deequ" % "deequ" % "1.1.0_spark-2.2-scala-2.11"
 )
 
 
