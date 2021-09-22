@@ -3,7 +3,7 @@ name := "gilberto"
 version := "0.1"
 
 scalaVersion := "2.12.12"
-val sparkVersion = "3.0.3"
+val sparkVersion = "3.1.2"
 
 resolvers ++= Seq(
   "mvnrepository" at "https://mvnrepository.com/artifact/",
@@ -22,8 +22,8 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "commons-validator" % "commons-validator" % "1.7",
-  "com.holdenkarau" %% "spark-testing-base" % s"3.0.2_1.1.0" % Test,
-  "com.amazon.deequ" % "deequ" % "1.2.2-spark-3.0"
+  "com.holdenkarau" %% "spark-testing-base" % s"3.1.2_1.1.0" % Test,
+  "com.amazon.deequ" % "deequ" % "2.0.0-spark-3.1"
 )
 
 

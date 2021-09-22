@@ -12,7 +12,7 @@ Specifically, you can instantiate:
 * `profile` to perform profiling of any Spark DataFrame - loaded from a Hive table
 * `suggest` to perform constraint suggestion based on selected data distribution
 * `validate` to perform a data quality validation step, based on an input ***check*** file
-* `detect` to perform anomaly detection, based on an imput ***strategy*** file
+* `detect` to perform anomaly detection, based on an input ***strategy*** file
 
 Gilberto is meant to be run as a step within a workflow manager (e.g. with the workflow failing in case of data inconsistencies), pulling data from a remote Hadoop/Hive cluster or S3/Presto datalake and pushing data to specific MetricsRepositories.
 
