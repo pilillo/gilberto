@@ -13,6 +13,7 @@ usage(){
   -n  | --name: name of the spark application
   Optional:
   -b  | --build-image: whether to locally build the image to be spawned and used for the submitter (version extracted from local build.sbt or envvar GILBERTO_VERSION)
+  -pr | --push-to-repo: whether to push the image to a remote repo, if set, it expects a parameter of kind myrepo:port/organization (without trailing /) to prepend to the image tag
   -sv | --spark-version: version of the target spark environment (default 3.1.2)
   -hv | --hadoop-version: version of the target hadoop environment (default 3.2)
   -t  | --tag: run specific image tag instead of building one or using an available project image
@@ -45,6 +46,10 @@ do
     ;;
     -t|--tag)
     export TAG="${2}"
+    shift
+    ;;
+    -pr|--push-to-repo)
+    PUSH_TO_REPO="${2}"
     shift
     ;;
     -p|--params)
@@ -92,9 +97,14 @@ if [ -z "${TAG}" ]; then
   export TAG="${APP_NAME}:${GILBERTO_VERSION}_${HADOOP_VERSION}_${SPARK_VERSION}"
 
   # build image, if specified
-  if [ "$BUILD" = "true" ]; then
+  if [ "${BUILD_IMAGE}" = "true" ]; then
     echo "Building ${TAG} using local Dockerfile"
     docker build --build-arg HADOOP_VERSION --build-arg SPARK_VERSION --tag ${TAG} .
+    if [ ! -z "${PUSH_TO_REPO}" ]; then
+      docker tag ${TAG} ${PUSH_TO_REPO}/${TAG}
+      export TAG=${PUSH_TO_REPO}/${TAG}
+      docker push ${TAG}
+    fi
   fi
 fi
 
