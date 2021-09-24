@@ -31,7 +31,6 @@ fi
 --name ${APP_NAME} \
 --class com.github.pilillo.Gilberto \
 --conf spark.kubernetes.namespace=${NAMESPACE} \
---conf spark.kubernetes.driver.pod.name=${DRIVER_NAME} \
 --conf spark.kubernetes.container.image=${TAG} \
 --properties-file /opt/spark/work-dir/spark.conf \
 --verbose \
