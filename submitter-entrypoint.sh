@@ -24,13 +24,17 @@ else
   exit
 fi
 
+# https://spark.apache.org/docs/latest/running-on-kubernetes.html#dependency-management
 /opt/spark/bin/spark-submit \
+--master ${K8SMASTER} \
+--deploy-mode ${DEPLOYMODE} \
 --name ${APP_NAME} \
 --class com.github.pilillo.Gilberto \
 --conf spark.kubernetes.namespace=${NAMESPACE} \
 --conf spark.kubernetes.driver.pod.name=${DRIVER_NAME} \
 --conf spark.kubernetes.container.image=${TAG} \
 --properties-file /opt/spark/work-dir/spark.conf \
-/gilberto.jar "${JOB_PARAMS[@]}"
+--verbose \
+local:///gilberto.jar "${JOB_PARAMS[@]}"
 
 

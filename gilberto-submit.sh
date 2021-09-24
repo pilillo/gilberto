@@ -3,12 +3,16 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 usage(){
   cat << EOF
-  usage: $0 -n <name> -ns <namespace> [-hv <hadoop-version>, -sv <spark-version>, -b, -t <tag>]
-      |  $0 -n <name> -ns <namespace> -hv 3.2 -sv 3.1.2 -b
-      |  $0 -n <name> -ns <namespace> -t
+  usage: $0 -m <k8s-cluster> -dm <deploy-mode> -n <name> -ns <namespace> [-hv <hadoop-version>, -sv <spark-version>, -b, -t <tag>]
+      |  $0 -m <k8s-cluster> -dm cluster -n test-app -ns mynamespace -hv 3.2 -sv 3.1.2 -b
+      |  $0 -m <k8s-cluster> -l kubernetes.default:host-gateway -dm cluster -n test-app -ns mynamespace -t <tag>
+      |  $0 -l kubernetes.default:host-gateway -m k8s://https://kubernetes.default:62769 -dm cluster ...
   -----
   -h  | --help: print usage
   Required:
+  -m  | --master: k8s master of kind k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port>
+  -l  | --localhost-cluster: to bind to the host network, when the cluster runs on the same node
+  -dm | --deploy-mode: spark deploy mode
   -ns | --namespace: k8s namespace to deploy the spark application
   -n  | --name: name of the spark application
   Optional:
@@ -25,6 +29,18 @@ EOF
 while [[ $# -ne 0 ]];
 do
   case "${1}" in
+    -m|--master)
+    export K8SMASTER="${2}"
+    shift
+    ;;
+    -l|--localhost-cluster)
+    LOCALHOST_CLUSTER="${2}"
+    shift
+    ;;
+    -dm|--deploy-mode)
+    export DEPLOYMODE="${2}"
+    shift
+    ;;
     -ns|--namespace)
     export NAMESPACE="${2}"
     shift
@@ -69,7 +85,7 @@ shift
 done
 
 # check all required vars are set
-declare -a REQUIRED=("NAMESPACE" "APP_NAME")
+declare -a REQUIRED=("K8SMASTER" "DEPLOYMODE" "NAMESPACE" "APP_NAME")
 for A in "${REQUIRED[@]}"
 do
    if [[ -z "${!A}" ]]; then
@@ -112,11 +128,16 @@ export JOB_PARAMS=${JOB_PARAMS:-""}
 
 # ----- Running Step
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
-# host.docker.internal
-# --network="host"
+DOCKER_RUN_COMMAND="docker run"
+if [ ! -z "${LOCALHOST_CLUSTER}" ]; then
+  # e.g. --add-host kubernetes.default:host-gateway binds the hostname kubernetes.default to host-gateway
+  # same as --net=host on linux
+  DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} --add-host ${LOCALHOST_CLUSTER}"
+fi
+
 read -r -d '' DOCKER_RUN_COMMAND <<- EOF
-  docker run \
-  -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS \
+  ${DOCKER_RUN_COMMAND}
+  -e K8SMASTER -e DEPLOYMODE -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS \
   --mount type=bind,source=${SCRIPT_DIR}/sa-conf,target=/opt/spark/work-dir/sa-conf \
   --mount type=bind,source=${SCRIPT_DIR}/submitter-entrypoint.sh,target=/opt/spark/work-dir/submitter-entrypoint.sh \
   --mount type=bind,source=${SCRIPT_DIR}/spark.conf,target=/opt/spark/work-dir/spark.conf \

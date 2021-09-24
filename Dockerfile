@@ -27,3 +27,5 @@ FROM pilillo/spark:${HADOOP_VERSION}_${SPARK_VERSION} as spark
 ARG PROJ_NAME
 
 COPY --from=builder /${PROJ_NAME}/gilberto.jar /gilberto.jar
+
+RUN chmod -R ag+rx /gilberto.jar
