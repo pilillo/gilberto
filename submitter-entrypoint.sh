@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-DRIVER_NAME="${APP_NAME}-driver"
-
 # https://gist.github.com/jonsuh/3c89c004888dfc7352be
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
