@@ -30,7 +30,8 @@ fi
 # https://spark.apache.org/docs/latest/running-on-kubernetes.html#dependency-management
 read -r -d '' SUBMIT_COMMAND <<- EOF
   /opt/spark/bin/spark-submit \
-  --master ${K8SMASTER} --deploy-mode ${DEPLOYMODE} \
+  --master ${K8SMASTER} \
+  --deploy-mode ${DEPLOYMODE} \
   ${KRB_LOGIN} \
   --name ${APP_NAME} \
   --class com.github.pilillo.Gilberto \
@@ -38,9 +39,10 @@ read -r -d '' SUBMIT_COMMAND <<- EOF
   --conf spark.kubernetes.container.image=${TAG} \
   --properties-file /opt/spark/work-dir/spark.conf \
   --verbose \
-  local:///gilberto.jar "${JOB_PARAMS[@]}"
+  local:///gilberto.jar
 EOF
 
+SUBMIT_COMMAND="${SUBMIT_COMMAND} ${JOB_PARAMS[@]}"
 SUBMIT_COMMAND=$(echo ${SUBMIT_COMMAND} | tr '\n' ' ' | sed -e 's/[[:space:]]*$//')
 
 echo ${SUBMIT_COMMAND}
