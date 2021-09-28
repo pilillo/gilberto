@@ -16,6 +16,8 @@ usage(){
   -ns | --namespace: k8s namespace to deploy the spark application
   -n  | --name: name of the spark application
   Optional:
+  -kp | --kerberos-principal: the principal to use for kerberos authentication (must provide a keytab as well)
+  -kt | --kerberos-keytab: the keytab to use for kerberos authentication (must define a principal as well)
   -b  | --build-image: whether to locally build the image to be spawned and used for the submitter (version extracted from local build.sbt or envvar GILBERTO_VERSION)
   -pr | --push-to-repo: whether to push the image to a remote repo, if set, it expects a parameter of kind myrepo:port/organization (without trailing /) to prepend to the image tag
   -sv | --spark-version: version of the target spark environment (default 3.1.2)
@@ -29,6 +31,14 @@ EOF
 while [[ $# -ne 0 ]];
 do
   case "${1}" in
+    -kp|--kerberos-principal)
+    export KRB_PRINCIPAL="${2}"
+    shift
+    ;;
+    -kt|--kerberos-keytab)
+    KRB_KEYTAB="${2}"
+    shift
+    ;;
     -m|--master)
     export K8SMASTER="${2}"
     shift
@@ -124,7 +134,26 @@ if [ -z "${TAG}" ]; then
   fi
 fi
 
+# default values - optional but provided to the submit
 export JOB_PARAMS=${JOB_PARAMS:-""}
+
+# https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-os-x
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+if [ ! -z "${KRB_PRINCIPAL}" ]; then
+  if [ -z "${KRB_KEYTAB}" ]; then
+    echo "If you define a principal, you must provide a keytab file!"
+    exit
+  else
+    export KRB_MOUNTED_KEYTAB="/opt/spark/work-dir/$(basename ${KRB_KEYTAB})"
+    HOST_KRB_KEYTAB=$(realpath ${KRB_KEYTAB})
+    echo "Mounting ${HOST_KRB_KEYTAB} as ${KRB_MOUNTED_KEYTAB}"
+    MOUNT_KEYTAB="--mount type=bind,source=${HOST_KRB_KEYTAB},target=${KRB_MOUNTED_KEYTAB}"
+  fi
+fi
+
 
 # ----- Running Step
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
@@ -136,11 +165,12 @@ if [ ! -z "${LOCALHOST_CLUSTER}" ]; then
 fi
 
 read -r -d '' DOCKER_RUN_COMMAND <<- EOF
-  ${DOCKER_RUN_COMMAND}
-  -e K8SMASTER -e DEPLOYMODE -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS \
+  ${DOCKER_RUN_COMMAND} \
+  -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS \
   --mount type=bind,source=${SCRIPT_DIR}/sa-conf,target=/opt/spark/work-dir/sa-conf \
   --mount type=bind,source=${SCRIPT_DIR}/submitter-entrypoint.sh,target=/opt/spark/work-dir/submitter-entrypoint.sh \
   --mount type=bind,source=${SCRIPT_DIR}/spark.conf,target=/opt/spark/work-dir/spark.conf \
+  ${MOUNT_KEYTAB} \
   --entrypoint /opt/spark/work-dir/submitter-entrypoint.sh \
   ${TAG}
 EOF

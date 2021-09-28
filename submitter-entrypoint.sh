@@ -22,16 +22,27 @@ else
   exit
 fi
 
-# https://spark.apache.org/docs/latest/running-on-kubernetes.html#dependency-management
-/opt/spark/bin/spark-submit \
---master ${K8SMASTER} \
---deploy-mode ${DEPLOYMODE} \
---name ${APP_NAME} \
---class com.github.pilillo.Gilberto \
---conf spark.kubernetes.namespace=${NAMESPACE} \
---conf spark.kubernetes.container.image=${TAG} \
---properties-file /opt/spark/work-dir/spark.conf \
---verbose \
-local:///gilberto.jar "${JOB_PARAMS[@]}"
+if [ ! -z "${KRB_PRINCIPAL}" ]; then
+  KRB_LOGIN="--principal ${KRB_PRINCIPAL} --keytab ${KRB_MOUNTED_KEYTAB}"
+  echo "Authenticating as ${KRB_LOGIN}"
+fi
 
+# https://spark.apache.org/docs/latest/running-on-kubernetes.html#dependency-management
+read -r -d '' SUBMIT_COMMAND <<- EOF
+  /opt/spark/bin/spark-submit \
+  --master ${K8SMASTER} --deploy-mode ${DEPLOYMODE} \
+  ${KRB_LOGIN} \
+  --name ${APP_NAME} \
+  --class com.github.pilillo.Gilberto \
+  --conf spark.kubernetes.namespace=${NAMESPACE} \
+  --conf spark.kubernetes.container.image=${TAG} \
+  --properties-file /opt/spark/work-dir/spark.conf \
+  --verbose \
+  local:///gilberto.jar "${JOB_PARAMS[@]}"
+EOF
+
+SUBMIT_COMMAND=$(echo ${SUBMIT_COMMAND} | tr '\n' ' ' | sed -e 's/[[:space:]]*$//')
+
+echo ${SUBMIT_COMMAND}
+${SUBMIT_COMMAND}
 
