@@ -228,7 +228,7 @@ read -r -d '' DOCKER_RUN_COMMAND <<- EOF
   ${MOUNT_SPARK_CONF} \
   ${MOUNT_SA_CONF} \
   ${MOUNT_KEYTAB} \
-  --entrypoint /opt/spark/work-dir/submitter-entrypoint.sh \
+  --entrypoint /opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT}) \
   ${TAG}
 EOF
 
