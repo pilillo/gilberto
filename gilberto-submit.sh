@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# https://gist.github.com/jonsuh/3c89c004888dfc7352be
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NOCOLOR='\033[0m'
+
 usage(){
   cat << EOF
   usage: $0 -m <k8s-cluster> -dm <deploy-mode> -n <name> -ns <namespace> [-hv <hadoop-version>, -sv <spark-version>, -b, -t <tag>]
@@ -26,6 +31,7 @@ usage(){
   -sa | --sa-conf-dir: the path to the directory containing the sa secret and token
   -sc | --spark-conf: the path to the desired spark.conf file for the deploy
   -sv | --spark-version: version of the target spark environment (default 3.1.2)
+  -se | --submitter-entrypoint: use specified bash script as the container entrypoint
   -t  | --tag: run specific image tag instead of building one or using an available project image
 EOF
 }
@@ -34,6 +40,21 @@ EOF
 while [[ $# -ne 0 ]];
 do
   case "${1}" in
+    -b|--build)
+    BUILD_IMAGE="true"
+    ;;
+    -dm|--deploy-mode)
+    export DEPLOYMODE="${2}"
+    shift
+    ;;
+    -h|--help)
+    usage
+    exit
+    ;;
+    -hv|--hadoop-version)
+    export HADOOP_VERSION="${2}"
+    shift
+    ;;
     -k|--kill)
     export KILL="${2}"
     shift
@@ -46,16 +67,12 @@ do
     KRB_KEYTAB="${2}"
     shift
     ;;
-    -m|--master)
-    export K8SMASTER="${2}"
-    shift
-    ;;
     -l|--localhost-cluster)
     LOCALHOST_CLUSTER="${2}"
     shift
     ;;
-    -dm|--deploy-mode)
-    export DEPLOYMODE="${2}"
+    -m|--master)
+    export K8SMASTER="${2}"
     shift
     ;;
     -ns|--namespace)
@@ -66,12 +83,12 @@ do
     export APP_NAME="${2}"
     shift
     ;;
-    -sv|--spark-version)
-    export SPARK_VERSION="${2}"
+    -p|--params)
+    export JOB_PARAMS="${2}"
     shift
     ;;
-    -hv|--hadoop-version)
-    export HADOOP_VERSION="${2}"
+    -pr|--push-to-repo)
+    PUSH_TO_REPO="${2}"
     shift
     ;;
     -sa|--sa-conf-dir)
@@ -82,24 +99,17 @@ do
     SPARK_CONF="${2}"
     shift
     ;;
-    -b|--build)
-    BUILD_IMAGE="true"
+    -se|--submitter-entrypoint)
+    SUBMITTER_ENTRYPOINT="${2}"
+    shift
+    ;;
+    -sv|--spark-version)
+    export SPARK_VERSION="${2}"
+    shift
     ;;
     -t|--tag)
     export TAG="${2}"
     shift
-    ;;
-    -pr|--push-to-repo)
-    PUSH_TO_REPO="${2}"
-    shift
-    ;;
-    -p|--params)
-    export JOB_PARAMS="${2}"
-    shift
-    ;;
-    -h|--help)
-    usage
-    exit
     ;;
     *) # unknown
     usage
@@ -152,9 +162,28 @@ fi
 # default values - optional but provided to the submit
 export JOB_PARAMS=${JOB_PARAMS:-""}
 
+
 # https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-os-x
-realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+getabspath() {
+  command -v realpath >/dev/null 2>&1 && {
+    echo "$(realpath ${1})"
+  } || {
+    # base case, absolute path
+    if [[ $1 = /* ]]; then
+      echo "$1"
+    else
+      #echo "$PWD/${1#./}"
+      # check if dir, or if it exists but not as dir (file)
+      if [[ -d ${1} ]]; then
+        echo $(cd "${1}"; pwd)
+      elif [[ -f ${1} ]]; then
+        echo $(cd "$(dirname "$1")"; pwd)"/$(basename "${1}")"
+      else
+          echo -e "${RED}The specified path $1 does not exist!${NOCOLOR}" >&2
+          exit 1
+      fi
+    fi
+  }
 }
 
 if [ ! -z "${KRB_PRINCIPAL}" ]; then
@@ -163,21 +192,25 @@ if [ ! -z "${KRB_PRINCIPAL}" ]; then
     exit
   else
     export KRB_MOUNTED_KEYTAB="/opt/spark/work-dir/$(basename ${KRB_KEYTAB})"
-    HOST_KRB_KEYTAB=$(realpath ${KRB_KEYTAB})
+    HOST_KRB_KEYTAB=$(getabspath ${KRB_KEYTAB})
     echo "Using keytab at ${HOST_KRB_KEYTAB} as ${KRB_MOUNTED_KEYTAB}"
     MOUNT_KEYTAB="--mount type=bind,source=${HOST_KRB_KEYTAB},target=${KRB_MOUNTED_KEYTAB}"
   fi
 fi
 
 # mount default spark.conf unless the user provided one at a specific path
-export SPARK_CONF=$(realpath ${SPARK_CONF:-"${SCRIPT_DIR}/spark.conf"})
+export SPARK_CONF=$(getabspath ${SPARK_CONF:-"${SCRIPT_DIR}/spark.conf"})
 echo "Using Spark conf at ${SPARK_CONF}"
 MOUNT_SPARK_CONF="--mount type=bind,source=${SPARK_CONF},target=/opt/spark/work-dir/$(basename ${SPARK_CONF})"
 
 # mount default SA dir from the current folder, or the one provided by the user
-SA_CONF=$(realpath ${SA_CONF:-"${SCRIPT_DIR}/sa-conf"})
+SA_CONF=$(getabspath ${SA_CONF:-"${SCRIPT_DIR}/sa-conf"})
 echo "Using SA conf at ${SA_CONF}"
 MOUNT_SA_CONF="--mount type=bind,source=${SA_CONF},target=/opt/spark/work-dir/$(basename ${SA_CONF})"
+
+SUBMITTER_ENTRYPOINT=$(getabspath ${SUBMITTER_ENTRYPOINT:-"${SCRIPT_DIR}/submitter-entrypoint.sh"})
+echo "Overriding entrypoint with ${SUBMITTER_ENTRYPOINT}"
+MOUNT_ENTRYPOINT="--mount type=bind,source=${SUBMITTER_ENTRYPOINT},target=/opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT})"
 
 # ----- Running Step
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
@@ -191,7 +224,7 @@ fi
 read -r -d '' DOCKER_RUN_COMMAND <<- EOF
   ${DOCKER_RUN_COMMAND} \
   -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS -e SPARK_CONF \
-  --mount type=bind,source=${SCRIPT_DIR}/submitter-entrypoint.sh,target=/opt/spark/work-dir/submitter-entrypoint.sh \
+  ${MOUNT_ENTRYPOINT} \
   ${MOUNT_SPARK_CONF} \
   ${MOUNT_SA_CONF} \
   ${MOUNT_KEYTAB} \

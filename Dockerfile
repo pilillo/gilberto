@@ -28,3 +28,4 @@ FROM pilillo/spark:${HADOOP_VERSION}_${SPARK_VERSION} as spark
 ARG PROJ_NAME
 
 COPY --from=builder /${PROJ_NAME}/gilberto.jar /gilberto.jar
+COPY submitter-entrypoint.sh ${SPARK_HOME}/work-dir
