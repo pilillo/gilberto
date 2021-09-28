@@ -37,7 +37,7 @@ read -r -d '' SUBMIT_COMMAND <<- EOF
   --class com.github.pilillo.Gilberto \
   --conf spark.kubernetes.namespace=${NAMESPACE} \
   --conf spark.kubernetes.container.image=${TAG} \
-  --properties-file /opt/spark/work-dir/spark.conf \
+  --properties-file /opt/spark/work-dir/$(basename ${SPARK_CONF}) \
   --verbose \
   local:///gilberto.jar
 EOF

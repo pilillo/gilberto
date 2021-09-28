@@ -169,12 +169,12 @@ if [ ! -z "${KRB_PRINCIPAL}" ]; then
   fi
 fi
 
-# mount default spark conf unless the user provided one at a specific path
-SPARK_CONF=$(realpath ${SPARK_CONF:-"${SCRIPT_DIR}/spark.conf"})
+# mount default spark.conf unless the user provided one at a specific path
+export SPARK_CONF=$(realpath ${SPARK_CONF:-"${SCRIPT_DIR}/spark.conf"})
 echo "Using Spark conf at ${SPARK_CONF}"
 MOUNT_SPARK_CONF="--mount type=bind,source=${SPARK_CONF},target=/opt/spark/work-dir/$(basename ${SPARK_CONF})"
 
-# mount default SA from the current folder, or the one provided by the user
+# mount default SA dir from the current folder, or the one provided by the user
 SA_CONF=$(realpath ${SA_CONF:-"${SCRIPT_DIR}/sa-conf"})
 echo "Using SA conf at ${SA_CONF}"
 MOUNT_SA_CONF="--mount type=bind,source=${SA_CONF},target=/opt/spark/work-dir/$(basename ${SA_CONF})"
@@ -190,7 +190,7 @@ fi
 
 read -r -d '' DOCKER_RUN_COMMAND <<- EOF
   ${DOCKER_RUN_COMMAND} \
-  -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS \
+  -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS -e SPARK_CONF \
   --mount type=bind,source=${SCRIPT_DIR}/submitter-entrypoint.sh,target=/opt/spark/work-dir/submitter-entrypoint.sh \
   ${MOUNT_SPARK_CONF} \
   ${MOUNT_SA_CONF} \
