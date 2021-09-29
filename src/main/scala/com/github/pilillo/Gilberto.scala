@@ -23,7 +23,11 @@ object Gilberto {
     val processingDate = convertToLocalDateTimeViaInstant(dateTime)
 
     // ListMap implements an immutable map using a list-based data structure, and thus preserves insertion order.
-    val targetCols = arguments.partitionBy.split(Formats.PARTITIONBY_SPLIT_CHAR)
+    val targetCols = if(arguments.partitionBy != null){
+      arguments.partitionBy.split(Formats.PARTITIONBY_SPLIT_CHAR)
+    }else{
+      Array.empty[String]
+    }
 
     val tags = targetCols.toList.map(
       col => col match {
@@ -91,12 +95,12 @@ object Gilberto {
               5
             }else{
               val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
-              if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
-                log.error("No repository specified")
-                5
-              }else{
-                df.validate(codeConfig, df.getRepository(arguments.get.repository), getResultKey(arguments.get))
+              val repo = if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
+                null
+              }else {
+                df.getRepository(arguments.get.repository)
               }
+              df.validate(codeConfig, repo, getResultKey(arguments.get))
             }
           }
           case "detect" => {
@@ -122,5 +126,4 @@ object Gilberto {
     }
     if (exitCode != 0) sys.exit(exitCode)
   }
-
 }
