@@ -58,7 +58,6 @@ import com.amazon.deequ.analyzers._
 ```
 which is interpreted as tuple of kind `AnomalyDetectionStrategy, Analyzer[S, DoubleMetric]` and applied to a Detector instance (see [anomaly detection example](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/examples/anomaly_detection_example.md)).
 
-
 ## Metrics repositories
 
 Deequ provides an [InMemoryMetricsRepository](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/repository/memory/InMemoryMetricsRepository.scala) and a [FileSystemMetricsRepository](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/repository/fs/FileSystemMetricsRepository.scala).
