@@ -30,6 +30,8 @@ usage(){
   -dm | --deploy-mode: spark deploy mode
   -ns | --namespace: k8s namespace to deploy the spark application
   -n  | --name: name of the spark application
+  -sa | --sa-conf-dir: the path to the directory containing the sa secret and token (named as ca.crt and sa.token, also usable via the variable SA_CONF)
+  -sc | --spark-conf: the path to the desired spark.conf file for the deploy (also usable via the variable SPARK_CONF)
   Optional:
   -b  | --build-image: the folder containing the Dockerfile to build the image to be spawned and used for the submitter (version extracted from local build.sbt or envvar GILBERTO_VERSION)
   -hv | --hadoop-version: version of the target hadoop environment (default 3.2)
@@ -38,8 +40,6 @@ usage(){
   -k  | --kill: kill specified Spark Job
   -p  | --params: params passed over to the job (the envvar JOB_PARAMS can also be used)
   -pr | --push-to-repo: whether to push the image to a remote repo, if set, it expects a parameter of kind myrepo:port/organization (without trailing /) to prepend to the image tag
-  -sa | --sa-conf-dir: the path to the directory containing the sa secret and token
-  -sc | --spark-conf: the path to the desired spark.conf file for the deploy
   -sv | --spark-version: version of the target spark environment (default 3.1.2)
   -se | --submitter-entrypoint: use specified bash script as the container entrypoint
   -t  | --tag: run specific image tag instead of building one or using an available project image
@@ -131,7 +131,7 @@ shift
 done
 
 # check all required vars are set
-declare -a REQUIRED=("K8SMASTER" "DEPLOYMODE" "NAMESPACE" "APP_NAME")
+declare -a REQUIRED=("K8SMASTER" "DEPLOYMODE" "NAMESPACE" "APP_NAME" "SPARK_CONF" "SA_CONF")
 for A in "${REQUIRED[@]}"
 do
    if [[ -z "${!A}" ]]; then
@@ -223,9 +223,16 @@ SA_CONF=$(getabspath ${SA_CONF:-"${SCRIPT_DIR}/sa-conf"})
 echo "Using SA conf at ${SA_CONF}"
 MOUNT_SA_CONF="--mount type=bind,source=${SA_CONF},target=/opt/spark/work-dir/$(basename ${SA_CONF})"
 
-SUBMITTER_ENTRYPOINT=$(getabspath ${SUBMITTER_ENTRYPOINT:-"${SCRIPT_DIR}/submitter-entrypoint.sh"})
-echo "Overriding entrypoint with ${SUBMITTER_ENTRYPOINT}"
-MOUNT_ENTRYPOINT="--mount type=bind,source=${SUBMITTER_ENTRYPOINT},target=/opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT})"
+if [ ! -z "${SUBMITTER_ENTRYPOINT}" ]; then
+  #SUBMITTER_ENTRYPOINT=$(getabspath ${SUBMITTER_ENTRYPOINT:-"${SCRIPT_DIR}/submitter-entrypoint.sh"})
+  SUBMITTER_ENTRYPOINT=$(getabspath ${SUBMITTER_ENTRYPOINT})
+  echo "${RED}Overriding entrypoint with ${SUBMITTER_ENTRYPOINT}${NOCOLOR}"
+  MOUNT_ENTRYPOINT="--mount type=bind,source=${SUBMITTER_ENTRYPOINT},target=/opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT})"
+  ENTRYPOINT="--entrypoint /opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT})"
+else
+  # use the default submitter entrypoint shipped with the Docker image
+  ENTRYPOINT="--entrypoint /opt/spark/work-dir/submitter-entrypoint.sh"
+fi
 
 # ----- Running Step
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach
@@ -238,8 +245,8 @@ fi
 
 DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS -e SPARK_CONF "
 DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} ${MOUNT_ENTRYPOINT} ${MOUNT_SPARK_CONF} ${MOUNT_SA_CONF} ${MOUNT_KEYTAB} "
-DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} --entrypoint /opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT}) "
-DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND}  ${TAG}"
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} ${ENTRYPOINT} "
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} ${TAG}"
 
 echo "Running tag ${TAG}"
 echo ${DOCKER_RUN_COMMAND}

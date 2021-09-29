@@ -68,16 +68,17 @@ To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
 You can use the script `gilberto-submit.sh` to submit a docker-based Spark application on K8s.
-To install it:
+
+To install it, first set a target folder, for instance:
 
 ```bash
-# set a target folder
 GILBERTO_SUBMITTER_HOME=${HOME}/gilberto
-# download the submitter script
+```
+
+Then download the submit script, add run rights and create a symbolic link to use it anywhere:
+```bash
 wget https://raw.githubusercontent.com/pilillo/gilberto/master/gilberto-submit.sh --directory-prefix=$GILBERTO_SUBMITTER_HOME
-# add run rights
 sudo chmod +x $GILBERTO_SUBMITTER_HOME/gilberto-submit.sh
-# add a symbolik link to run the script anywhere
 echo sudo ln -s ${GILBERTO_SUBMITTER_HOME}/gilberto-submit.sh /usr/local/bin/gilberto-submit
 ```
 
