@@ -6,6 +6,8 @@ import java.time.ZoneId
 object Settings {
 
   object ColNames {
+    // reconfigure year, month, day to something else in case you named your partitioning columns differently
+    // todo: make this loadable from an application.properties file (an input config file may be too much effort to operate for this alone)
     val YEAR = "year"
     val MONTH = "month"
     val DAY = "day"

@@ -14,8 +14,8 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
       "--action", "test",
       "--source", "b",
       "--destination", "c",
-      "--from", "01/01/2020",
-      "--to", "01/01/2020"
+      "--from", "2020-01-01",
+      "--to", "2020-01-01"
     )
     val arguments1 = TimeInterval.parse(args1)
 
@@ -23,8 +23,8 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
     assert("test", arguments1.get.action)
     assert("b", arguments1.get.source)
     assert("c", arguments1.get.destination)
-    assert("01/01/2020", arguments1.get.dateFrom)
-    assert("01/01/2020", arguments1.get.dateTo)
+    assert("2020-01-01", arguments1.get.dateFrom)
+    assert("2020-01-01", arguments1.get.dateTo)
 
     // optional args
     assert(null, arguments1.get.repository)
@@ -40,8 +40,8 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
       "--action", "test",
       "--source", "b",
       "--destination", "c",
-      "--from", "01/01/2020",
-      "--to", "01/01/2020",
+      "--from", "2020-01-01",
+      "--to", "2020-01-01",
       "--partition-by", "PROC_YEAR,PROC_MONTH,PROC_DAY"
     )
     val arguments = TimeInterval.parse(args1)

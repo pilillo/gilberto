@@ -28,8 +28,8 @@ Specifically:
   -a, --action action             Action is the pipeline to be run
   -s, --source source             Source defines where to load data from
   -d, --destination destination   Destination defines where to save results
-  -f, --from date                 Beginning of the time interval
-  -t, --to date                   End of the time interval
+  -f, --from date                 Beginning of the time interval (default as yyyy-MM-dd)
+  -t, --to date                   End of the time interval (default as yyyy-MM-dd)
   -r, --repository target         Target folder or endpoint of the repository
   -c, --code-config-path path     Path of the file containing the checks to instruct the validator
   -p, --partition-by columns      Columns to use to partition the resulting dataframe

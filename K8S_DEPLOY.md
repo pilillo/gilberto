@@ -84,7 +84,7 @@ Spark settings are either provided at submit or written in the `spark.conf` whic
 In case of local single-node cluster, such as minikube or microk8s, the container needs to access the host network.
 The `-l` or `--localhost-cluster` parameter can be used to add a host alias in the container's `resolv.conf` file, such as:
 ```
-./gilberto-submit.sh -l kubernetes.default:host-gateway -m k8s://https://kubernetes.default:62769 -dm cluster -ns spark -n gilberto -hv 3.2 -sv 3.1.2 -p "-a profile -s test_table -f 01/01/2021 -t 01/01/2021"
+./gilberto-submit.sh -l kubernetes.default:host-gateway -m k8s://https://kubernetes.default:62769 -dm cluster -ns spark -n gilberto -hv 3.2 -sv 3.1.2 -p "-a profile -s test_table -f 2021-01-01 -t 2021-01-01"
 ```
 
 which adds an alias for `kubernetes.default` to the host ip, so that minikube is reachable and the certificates can be validated with an accepted hostname (as opposed to the default `host.docker.internal`).
