@@ -11,6 +11,7 @@ import com.github.pilillo.commons.Utils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.IntegerType
 
 import java.time.{LocalDate, ZoneId}
 import scala.io.Source
@@ -30,7 +31,11 @@ object Helpers {
 
   def whereTimeIn(from : LocalDate, to : LocalDate) : DataFrame = {
    val res = df
-     // concat cols to create date col
+     // make sure we if we have an int we can do the format string, or cast from string to int otherwise
+     .withColumn(ColNames.YEAR, col(ColNames.YEAR).cast(IntegerType))
+     .withColumn(ColNames.MONTH, col(ColNames.MONTH).cast(IntegerType))
+     .withColumn(ColNames.DAY, col(ColNames.DAY).cast(IntegerType))
+     // concat cols to create date col, use %0nd to convert it back to a specific number of digits, if int
      .withColumn(
       ColNames.DATE_FILTER_UTC,
       format_string("%04d%s%02d%s%02d", col(ColNames.YEAR), lit(Formats.dateDelimiter), col(ColNames.MONTH), lit(Formats.dateDelimiter), col(ColNames.DAY))
