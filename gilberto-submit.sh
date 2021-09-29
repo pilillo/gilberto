@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -e
-# keep track of the last executed command
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-# echo an error message before exiting
-trap 'echo "\"${last_command}\" command exited with code $?."' EXIT
 
+# keep track of the last executed command
+#trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+#trap 'echo "\"${last_command}\" command exited with code $?."' EXIT
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
