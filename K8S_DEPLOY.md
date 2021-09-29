@@ -70,7 +70,7 @@ To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 You can use the script `gilberto-submit.sh` to submit a docker-based Spark application on K8s, for instance:
 
 ```
-./gilberto-submit.sh -m k8s://https://kubernetes.default:62769 -dm cluster  -ns spark -n gilberto -hv 3.2 -sv 3.1.2 -p "-a profile -s test_table -d /result -f 01/01/2021 -t 01/01/2021"
+./gilberto-submit.sh -m k8s://https://kubernetes.default:62769 -dm cluster  -ns spark -n gilberto -hv 3.2 -sv 3.1.2 -p "-a profile -s test_table -d /result -f 2021-01-01 -t 2021-01-01"
 ```
 
 Mandatory fields for the submit script are:

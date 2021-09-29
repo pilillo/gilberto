@@ -68,3 +68,7 @@ We provide the following metrics repositories:
 * [`MastroMetricsRepository`](https://github.com/pilillo/gilberto/tree/master/src/main/scala/com/amazon/deequ/repository/mastro) pushing to the [Mastro](https://github.com/data-mill-cloud/mastro) catalogue and metrics repo; consequently allowing for lineage tracking and source discovery;
 * [`QuerableMetricsRepository`](https://github.com/pilillo/gilberto/tree/master/src/main/scala/com/amazon/deequ/repository/querable) based on the existing `FileSystemMetricsRepository` but writing DataFrames as partitioned parquet files instead of as a unique json file;
 
+## Deployment
+
+* [YARN](YARN_DEPLOY.md)
+* [K8s](K8S_DEPLOY.md)

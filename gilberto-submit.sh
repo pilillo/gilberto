@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+set -e
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command exited with code $?."' EXIT
+
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # https://gist.github.com/jonsuh/3c89c004888dfc7352be
@@ -9,7 +16,7 @@ NOCOLOR='\033[0m'
 usage(){
   cat << EOF
   usage: $0 -m <k8s-cluster> -dm <deploy-mode> -n <name> -ns <namespace> [-hv <hadoop-version>, -sv <spark-version>, -b, -t <tag>]
-      |  $0 -m <k8s-cluster> -dm cluster -n test-app -ns mynamespace -hv 3.2 -sv 3.1.2 -b
+      |  $0 -m <k8s-cluster> -dm cluster -n test-app -ns mynamespace -hv 3.2 -sv 3.1.2 -b /my/path/to/gilberto
       |  $0 -m <k8s-cluster> -l kubernetes.default:host-gateway -dm cluster -n test-app -ns mynamespace -t <tag>
       |  $0 -l kubernetes.default:host-gateway -m k8s://https://kubernetes.default:62769 -dm cluster ...
   -----
@@ -21,7 +28,7 @@ usage(){
   -ns | --namespace: k8s namespace to deploy the spark application
   -n  | --name: name of the spark application
   Optional:
-  -b  | --build-image: whether to locally build the image to be spawned and used for the submitter (version extracted from local build.sbt or envvar GILBERTO_VERSION)
+  -b  | --build-image: the folder containing the Dockerfile to build the image to be spawned and used for the submitter (version extracted from local build.sbt or envvar GILBERTO_VERSION)
   -hv | --hadoop-version: version of the target hadoop environment (default 3.2)
   -kp | --kerberos-principal: the principal to use for kerberos authentication (must provide a keytab as well)
   -kt | --kerberos-keytab: the keytab to use for kerberos authentication (must define a principal as well)
@@ -41,7 +48,8 @@ while [[ $# -ne 0 ]];
 do
   case "${1}" in
     -b|--build)
-    BUILD_IMAGE="true"
+    BUILD_IMAGE="${2}"
+    shift
     ;;
     -dm|--deploy-mode)
     export DEPLOYMODE="${2}"
@@ -129,40 +137,6 @@ do
    fi
 done
 
-# ----- Build Step
-# retrieve proj version from sbt file, if available
-command -v sbt >/dev/null 2>&1 && {
-  GILBERTO_VERSION=$(sbt -Dsbt.supershell=false -error "print version")
-} || {
-  # if not, use the provided var, if any, or default to a version for fault tolerance
-  GILBERTO_VERSION=${GILBERTO_VERSION:-0.1}
-}
-
-# if a tag is not defined, create one from the other parameters
-if [ -z "${TAG}" ]; then
-  # set to default version or to provided one if any
-  export HADOOP_VERSION=${HADOOP_VERSION:-3.2}
-  export SPARK_VERSION=${SPARK_VERSION:-3.1.2}
-
-  # tag of target image
-  export TAG="${APP_NAME}:${GILBERTO_VERSION}_${HADOOP_VERSION}_${SPARK_VERSION}"
-
-  # build image, if specified
-  if [ "${BUILD_IMAGE}" = "true" ]; then
-    echo "Building ${TAG} using local Dockerfile"
-    docker build --build-arg HADOOP_VERSION --build-arg SPARK_VERSION --tag ${TAG} .
-    if [ ! -z "${PUSH_TO_REPO}" ]; then
-      docker tag ${TAG} ${PUSH_TO_REPO}/${TAG}
-      export TAG=${PUSH_TO_REPO}/${TAG}
-      docker push ${TAG}
-    fi
-  fi
-fi
-
-# default values - optional but provided to the submit
-export JOB_PARAMS=${JOB_PARAMS:-""}
-
-
 # https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-os-x
 getabspath() {
   command -v realpath >/dev/null 2>&1 && {
@@ -186,6 +160,41 @@ getabspath() {
   }
 }
 
+# ----- Build Step
+# retrieve proj version from sbt file, if available
+command -v sbt >/dev/null 2>&1 && [ ! -z "${BUILD_IMAGE}" ] && {
+  GILBERTO_VERSION=$(cd ${BUILD_IMAGE}; sbt -Dsbt.supershell=false -error "print version")
+  echo "${RED}Retrieved project version ${GILBERTO_VERSION} from build.sbt file at ${BUILD_IMAGE}${NOCOLOR}"
+} || {
+  # if not, use the provided var, if any, or default to a version for fault tolerance
+  GILBERTO_VERSION=${GILBERTO_VERSION:-0.1}
+}
+
+# if a tag is not defined, create one from the other parameters
+if [ -z "${TAG}" ]; then
+  # set to default version or to provided one if any
+  export HADOOP_VERSION=${HADOOP_VERSION:-3.2}
+  export SPARK_VERSION=${SPARK_VERSION:-3.1.2}
+
+  # tag of target image
+  export TAG="${APP_NAME}:${GILBERTO_VERSION}_${HADOOP_VERSION}_${SPARK_VERSION}"
+
+  # build image, if specified
+  if [ ! -z "${BUILD_IMAGE}" ]; then
+    DOCKER_CONTEXT=$(getabspath ${BUILD_IMAGE})
+    echo "${YELLOW}Building ${TAG} using local Dockerfile available at ${DOCKER_CONTEXT}${NOCOLOR}"
+    docker build --build-arg HADOOP_VERSION --build-arg SPARK_VERSION --tag ${TAG} -f ${DOCKER_CONTEXT}/Dockerfile ${DOCKER_CONTEXT}
+    if [ ! -z "${PUSH_TO_REPO}" ]; then
+      docker tag ${TAG} ${PUSH_TO_REPO}/${TAG}
+      export TAG=${PUSH_TO_REPO}/${TAG}
+      docker push ${TAG}
+    fi
+  fi
+fi
+
+# default values - optional but provided to the submit
+export JOB_PARAMS=${JOB_PARAMS:-""}
+
 if [ ! -z "${KRB_PRINCIPAL}" ]; then
   if [ -z "${KRB_KEYTAB}" ]; then
     echo "If you define a principal, you must provide a keytab file!"
@@ -196,6 +205,9 @@ if [ ! -z "${KRB_PRINCIPAL}" ]; then
     echo "Using keytab at ${HOST_KRB_KEYTAB} as ${KRB_MOUNTED_KEYTAB}"
     MOUNT_KEYTAB="--mount type=bind,source=${HOST_KRB_KEYTAB},target=${KRB_MOUNTED_KEYTAB}"
   fi
+else
+  export KRB_PRINCIPAL=""
+  export KRB_KEYTAB=""
 fi
 
 # mount default spark.conf unless the user provided one at a specific path
@@ -221,18 +233,10 @@ if [ ! -z "${LOCALHOST_CLUSTER}" ]; then
   DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} --add-host ${LOCALHOST_CLUSTER}"
 fi
 
-read -r -d '' DOCKER_RUN_COMMAND <<- EOF
-  ${DOCKER_RUN_COMMAND} \
-  -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS -e SPARK_CONF \
-  ${MOUNT_ENTRYPOINT} \
-  ${MOUNT_SPARK_CONF} \
-  ${MOUNT_SA_CONF} \
-  ${MOUNT_KEYTAB} \
-  --entrypoint /opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT}) \
-  ${TAG}
-EOF
-
-DOCKER_RUN_COMMAND=$(echo ${DOCKER_RUN_COMMAND} | tr '\n' ' ' | sed -e 's/[[:space:]]*$//')
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} -e K8SMASTER -e DEPLOYMODE -e KRB_PRINCIPAL -e KRB_MOUNTED_KEYTAB -e APP_NAME -e NAMESPACE -e TAG -e JOB_PARAMS -e SPARK_CONF "
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} ${MOUNT_ENTRYPOINT} ${MOUNT_SPARK_CONF} ${MOUNT_SA_CONF} ${MOUNT_KEYTAB} "
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND} --entrypoint /opt/spark/work-dir/$(basename ${SUBMITTER_ENTRYPOINT}) "
+DOCKER_RUN_COMMAND="${DOCKER_RUN_COMMAND}  ${TAG}"
 
 echo "Running tag ${TAG}"
 echo ${DOCKER_RUN_COMMAND}
