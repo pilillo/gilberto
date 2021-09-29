@@ -2,11 +2,14 @@
 set -e
 
 # keep track of the last executed command
-#trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
-#trap 'echo "\"${last_command}\" command exited with code $?."' EXIT
+trap 'echo "\"${last_command}\" command exited with code $?."' EXIT
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# https://gist.github.com/olegch/1730673
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # https://gist.github.com/jonsuh/3c89c004888dfc7352be
 RED='\033[0;31m'
@@ -121,7 +124,7 @@ do
     ;;
     *) # unknown
     usage
-    exit
+    exit 1
     ;;
   esac
 shift
