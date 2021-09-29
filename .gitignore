@@ -5,3 +5,4 @@ project/target/*
 *.crc
 *.json
 myrepo*
+sa-conf
