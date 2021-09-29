@@ -12,7 +12,7 @@ Specifically, you can instantiate:
 * `profile` to perform profiling of any Spark DataFrame - loaded from a Hive table
 * `suggest` to perform constraint suggestion based on selected data distribution
 * `validate` to perform a data quality validation step, based on an input ***check*** file
-* `detect` to perform anomaly detection, based on an imput ***strategy*** file
+* `detect` to perform anomaly detection, based on an input ***strategy*** file
 
 Gilberto is meant to be run as a step within a workflow manager (e.g. with the workflow failing in case of data inconsistencies), pulling data from a remote Hadoop/Hive cluster or S3/Presto datalake and pushing data to specific MetricsRepositories.
 
@@ -28,8 +28,8 @@ Specifically:
   -a, --action action             Action is the pipeline to be run
   -s, --source source             Source defines where to load data from
   -d, --destination destination   Destination defines where to save results
-  -f, --from date                 Beginning of the time interval
-  -t, --to date                   End of the time interval
+  -f, --from date                 Beginning of the time interval (default as yyyy-MM-dd)
+  -t, --to date                   End of the time interval (default as yyyy-MM-dd)
   -r, --repository target         Target folder or endpoint of the repository
   -c, --code-config-path path     Path of the file containing the checks to instruct the validator
   -p, --partition-by columns      Columns to use to partition the resulting dataframe
@@ -57,7 +57,6 @@ import com.amazon.deequ.analyzers._
 )
 ```
 which is interpreted as tuple of kind `AnomalyDetectionStrategy, Analyzer[S, DoubleMetric]` and applied to a Detector instance (see [anomaly detection example](https://github.com/awslabs/deequ/blob/master/src/main/scala/com/amazon/deequ/examples/anomaly_detection_example.md)).
-
 
 ## Metrics repositories
 
