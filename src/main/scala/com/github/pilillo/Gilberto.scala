@@ -3,7 +3,7 @@ package com.github.pilillo
 import com.amazon.deequ.repository.ResultKey
 import com.github.pilillo.Helpers._
 import com.github.pilillo.Settings.{ColNames, Formats}
-import com.github.pilillo.commons.Utils.{convertToLocalDateTimeViaInstant, getCurrentDateTime}
+import com.github.pilillo.commons.Utils.{convertToLocalDateTimeViaInstant, getCurrentDateTime, parseTimeRange}
 import com.github.pilillo.commons.{TimeInterval, TimeIntervalArguments, Utils}
 import com.github.pilillo.pipelines.BatchAnomalyDetector._
 import com.github.pilillo.pipelines.BatchProfiler._
@@ -21,6 +21,7 @@ object Gilberto {
   def getResultKey(arguments : TimeIntervalArguments) : ResultKey = {
     val dateTime = getCurrentDateTime()
     val processingDate = convertToLocalDateTimeViaInstant(dateTime)
+    val (from, to) = parseTimeRange(arguments.dateFrom, arguments.dateTo)
 
     // ListMap implements an immutable map using a list-based data structure, and thus preserves insertion order.
     val targetCols = if(arguments.partitionBy != null){
@@ -31,16 +32,14 @@ object Gilberto {
 
     val tags = targetCols.toList.map(
       col => col match {
-        /*
         // interval start date
-        case ColNames.START_YEAR =>
-        case ColNames.START_MONTH =>
-        case ColNames.START_DAY =>
+        case ColNames.START_YEAR => (col, "%04d".format(from.get.getYear))
+        case ColNames.START_MONTH => (col, "%02d".format(from.get.getMonthValue))
+        case ColNames.START_DAY => (col, "%02d".format(from.get.getDayOfMonth))
         // interval end date
-        case ColNames.END_YEAR =>
-        case ColNames.END_MONTH =>
-        case ColNames.END_DAY =>
-         */
+        case ColNames.END_YEAR => (col, "%04d".format(to.get.getYear))
+        case ColNames.END_MONTH => (col, "%02d".format(to.get.getMonthValue))
+        case ColNames.END_DAY => (col, "%02d".format(to.get.getDayOfMonth))
         // processing time - date of running the pipeline
         case ColNames.PROC_YEAR => (col, "%04d".format(processingDate.getYear))
         case ColNames.PROC_MONTH => (col, "%02d".format(processingDate.getMonthValue))
