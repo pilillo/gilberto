@@ -67,7 +67,7 @@ object Utils {
             val writer = partitionedResult.coalesce(Configs.NUM_TARGET_PARTITIONS).write.mode(SaveMode.Overwrite)
 
             // validate dataframe - check if all columns exist with that name
-            if(targetCols.filterNot(partitionedResult.columns.toSet).isEmpty){
+            if(!targetCols.filterNot(partitionedResult.columns.toSet).isEmpty){
                 log.error("Partitioned dataframe does not contain all target columns")
                 // todo: should we just sys.exit here?
                 sys.exit(5)
