@@ -40,17 +40,17 @@ object Utils {
         val partitionedResult = targetCols.foldLeft(result)(
             (df, col) => col match {
                 // interval start date
-                case ColNames.START_YEAR => df.withColumn(ColNames.START_YEAR, lit(from.get.getYear))
-                case ColNames.START_MONTH => df.withColumn(ColNames.START_MONTH, lit(from.get.getMonthValue))
-                case ColNames.START_DAY => df.withColumn(ColNames.START_DAY, lit(from.get.getDayOfMonth))
+                case ColNames.START_YEAR => df.withColumn(ColNames.START_YEAR, lit("%04d".format(from.get.getYear)))
+                case ColNames.START_MONTH => df.withColumn(ColNames.START_MONTH, lit("%02d".format(from.get.getMonthValue)))
+                case ColNames.START_DAY => df.withColumn(ColNames.START_DAY, lit("%02d".format(from.get.getDayOfMonth)))
                 // interval end date
-                case ColNames.END_YEAR => df.withColumn(ColNames.END_YEAR, lit(to.get.getYear))
-                case ColNames.END_MONTH => df.withColumn(ColNames.END_MONTH, lit(to.get.getMonthValue))
-                case ColNames.END_DAY => df.withColumn(ColNames.END_DAY, lit(to.get.getDayOfMonth))
+                case ColNames.END_YEAR => df.withColumn(ColNames.END_YEAR, lit("%04d".format(to.get.getYear)))
+                case ColNames.END_MONTH => df.withColumn(ColNames.END_MONTH, lit("%02d".format(to.get.getMonthValue)))
+                case ColNames.END_DAY => df.withColumn(ColNames.END_DAY, lit("%02d".format(to.get.getDayOfMonth)))
                 // processing time - date of running the pipeline
-                case ColNames.PROC_YEAR => df.withColumn(ColNames.PROC_YEAR, lit(processingDate.getYear))
-                case ColNames.PROC_MONTH => df.withColumn(ColNames.PROC_MONTH, lit(processingDate.getMonthValue))
-                case ColNames.PROC_DAY => df.withColumn(ColNames.PROC_DAY, lit(processingDate.getDayOfMonth))
+                case ColNames.PROC_YEAR => df.withColumn(ColNames.PROC_YEAR, lit("%04d".format(processingDate.getYear)))
+                case ColNames.PROC_MONTH => df.withColumn(ColNames.PROC_MONTH, lit("%02d".format(processingDate.getMonthValue)))
+                case ColNames.PROC_DAY => df.withColumn(ColNames.PROC_DAY, lit("%02d".format(processingDate.getDayOfMonth)))
                 // skip uknown ones
                 case _ => df
             }
