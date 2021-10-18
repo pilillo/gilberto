@@ -7,7 +7,7 @@ import com.amazon.deequ.repository.MetricsRepository
 import com.amazon.deequ.repository.mastro.MastroMetricsRepository
 import com.amazon.deequ.repository.querable.QuerableMetricsRepository
 import com.github.pilillo.Settings.{ColNames, Formats}
-import com.github.pilillo.commons.{TimeIntervalArguments, Utils}
+import com.github.pilillo.commons.{Arguments, Utils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -77,7 +77,7 @@ object Helpers {
   }
 
   //def getRepository(repository : String) : MetricsRepository = {
-  def getRepository(arguments : TimeIntervalArguments) : MetricsRepository = {
+  def getRepository(arguments : Arguments) : MetricsRepository = {
    if(arguments.repository == null || arguments.repository.isEmpty) {
     null
    }else {

@@ -1,7 +1,7 @@
 package com.github.pilillo
 
 import com.amazon.deequ.repository.mastro.MastroSerde
-import com.github.pilillo.commons.TimeInterval
+import com.github.pilillo.commons.ArgParser
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.commons.validator.routines.UrlValidator
 import org.scalatest.FunSuite
@@ -17,7 +17,7 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
       "--from", "2020-01-01",
       "--to", "2020-01-01"
     )
-    val arguments1 = TimeInterval.parse(args1)
+    val arguments1 = ArgParser.parse(args1)
 
     // required args
     assert("test", arguments1.get.action)
@@ -30,7 +30,7 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
     assert(null, arguments1.get.repository)
 
     val args2 = args1 ++ Array[String]("--repository", "http://localhost", "--partition-by", "year,month,day")
-    val arguments2 = TimeInterval.parse(args2)
+    val arguments2 = ArgParser.parse(args2)
     assert( "http://localhost", arguments2.get.repository)
     assert( "year,month,day", arguments2.get.partitionBy)
   }
@@ -44,7 +44,7 @@ class ArgsTest extends FunSuite with DataFrameSuiteBase with Checkers {
       "--to", "2020-01-01",
       "--partition-by", "PROC_YEAR,PROC_MONTH,PROC_DAY"
     )
-    val arguments = TimeInterval.parse(args1)
+    val arguments = ArgParser.parse(args1)
     val resultKey = Gilberto.getResultKey(arguments.get)
 
     assert("PROC_YEAR", resultKey.tags.toList(0)._1)

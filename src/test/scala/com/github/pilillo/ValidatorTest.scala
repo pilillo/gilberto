@@ -9,7 +9,7 @@ import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import com.amazon.deequ.repository.memory.InMemoryMetricsRepository
 import com.amazon.deequ.repository.querable.QuerableMetricsRepository
-import com.github.pilillo.commons.TimeInterval
+import com.github.pilillo.commons.ArgParser
 
 import java.io.File
 import scala.reflect.io.Directory
@@ -121,7 +121,7 @@ class ValidatorTest extends FunSuite with DataFrameSuiteBase with Checkers {
       "--source", "b", "--destination", "c",
       "--from", "01/01/2020", "--to", "01/01/2020",
       "--partition-by", "PROC_YEAR,PROC_MONTH,PROC_DAY")
-    val arguments = TimeInterval.parse(args)
+    val arguments = ArgParser.parse(args)
     val resultKey = Gilberto.getResultKey(arguments.get)
 
     data.validate(codeConfig, repo, resultKey)

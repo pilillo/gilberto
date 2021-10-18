@@ -2,7 +2,7 @@ package com.github.pilillo.pipelines
 import com.amazon.deequ.metrics.Distribution
 import com.amazon.deequ.profiles.{ColumnProfilerRunner, NumericColumnProfile, StandardColumnProfile}
 import com.github.pilillo.Settings.ColNames
-import com.github.pilillo.commons.TimeIntervalArguments
+import com.github.pilillo.commons.Arguments
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.github.pilillo.Helpers._

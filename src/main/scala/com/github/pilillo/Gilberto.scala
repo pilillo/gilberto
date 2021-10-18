@@ -4,7 +4,7 @@ import com.amazon.deequ.repository.ResultKey
 import com.github.pilillo.Helpers._
 import com.github.pilillo.Settings.{ColNames, Formats}
 import com.github.pilillo.commons.Utils.{convertToLocalDateTimeViaInstant, getCurrentDateTime, parseTimeRange}
-import com.github.pilillo.commons.{TimeInterval, TimeIntervalArguments, Utils}
+import com.github.pilillo.commons.{ArgParser, Arguments, Utils}
 import com.github.pilillo.pipelines.BatchAnomalyDetector._
 import com.github.pilillo.pipelines.BatchProfiler._
 import com.github.pilillo.pipelines.BatchSuggester._
@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 object Gilberto {
   val log: Logger = Logger.getLogger(getClass.getName)
 
-  def getResultKey(arguments : TimeIntervalArguments) : ResultKey = {
+  def getResultKey(arguments : Arguments) : ResultKey = {
     val dateTime = getCurrentDateTime()
     val processingDate = convertToLocalDateTimeViaInstant(dateTime)
     val (from, to) = parseTimeRange(arguments.dateFrom, arguments.dateTo)
@@ -53,7 +53,7 @@ object Gilberto {
   }
 
   def main(args: Array[String]): Unit = {
-    val arguments = TimeInterval.parse(args)
+    val arguments = ArgParser.parse(args)
     if (arguments.isEmpty) {
       log.error("Invalid arguments")
       sys.exit(4)

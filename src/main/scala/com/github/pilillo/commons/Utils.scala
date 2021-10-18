@@ -32,7 +32,7 @@ object Utils {
         (Try(LocalDate.parse(from, Formats.inputDateFormatter)), Try(LocalDate.parse(to, Formats.inputDateFormatter)) )
     }
 
-    def partitionByStandardCols(result : DataFrame, arguments : TimeIntervalArguments) : (DataFrame, Array[String]) = {
+    def partitionByStandardCols(result : DataFrame, arguments : Arguments) : (DataFrame, Array[String]) = {
         val targetCols = arguments.partitionBy.split(Formats.PARTITIONBY_SPLIT_CHAR)
         val (from, to) = parseTimeRange(arguments.dateFrom, arguments.dateTo)
         val processingDate = convertToLocalDateTimeViaInstant(getCurrentDateTime())
@@ -59,7 +59,7 @@ object Utils {
         (partitionedResult, targetCols)
     }
 
-    def getPartitionedWriter(result : DataFrame, arguments : TimeIntervalArguments) : DataFrameWriter[Row] = {
+    def getPartitionedWriter(result : DataFrame, arguments : Arguments) : DataFrameWriter[Row] = {
         // if partitionBy is used
         if(arguments.partitionBy != null) {
             // attempt creating them in case they are named like specific placeholders
