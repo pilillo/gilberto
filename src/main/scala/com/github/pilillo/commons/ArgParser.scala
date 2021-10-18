@@ -1,8 +1,7 @@
 package com.github.pilillo.commons;
 
-object TimeInterval {
-    val parser = new scopt.OptionParser[TimeIntervalArguments](getClass.getName){
-
+object ArgParser {
+    val parser = new scopt.OptionParser[Arguments](getClass.getName){
         // action to run
         opt[String]('a', "action")
           .required()
@@ -12,30 +11,30 @@ object TimeInterval {
 
         // data source
         opt[String]('s', "source")
-            .required()
-            .valueName("source")
-            .action((x, c) => c.copy(source = x))
-            .text("Source defines where to load data from")
+          .required()
+          .valueName("source")
+          .action((x, c) => c.copy(source = x))
+          .text("Source defines where to load data from")
 
         // destination
         opt[String]('d', "destination")
-            .required()
-            .valueName("destination")
-            .action((x, c) => c.copy(destination = x))
-            .text("Destination defines where to save results")
+          .required()
+          .valueName("destination")
+          .action((x, c) => c.copy(destination = x))
+          .text("Destination defines where to save results")
 
         // time interval
         opt[String]('f', "from")
-            .required()
-            .valueName("date")
-            .action((x, c) => c.copy(dateFrom = x))
-            .text("Beginning of the time interval")
+          .required()
+          .valueName("date")
+          .action((x, c) => c.copy(dateFrom = x))
+          .text("Beginning of the time interval")
 
         opt[String]('t', "to")
-            .required()
-            .valueName("date")
-            .action((x, c) => c.copy(dateTo = x))
-            .text("End of the time interval")
+          .required()
+          .valueName("date")
+          .action((x, c) => c.copy(dateTo = x))
+          .text("End of the time interval")
 
         // metric repository
         opt[String]('r', "repository")
@@ -64,5 +63,5 @@ object TimeInterval {
           .action((x, c) => c.copy(partitionBy = x))
           .text("Columns to use to partition the resulting dataframe")
     }
-    def parse(args : Array[String]) : Option[TimeIntervalArguments] = parser.parse(args, TimeIntervalArguments())
+    def parse(args : Array[String]) : Option[Arguments] = parser.parse(args, Arguments())
 }

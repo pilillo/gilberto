@@ -1,6 +1,6 @@
 package com.github.pilillo
 
-import com.github.pilillo.commons.TimeInterval
+import com.github.pilillo.commons.ArgParser
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
