@@ -64,5 +64,4 @@ object Settings {
     val TEST_TRAIN_RATIO = 0.1
     val NUM_TARGET_PARTITIONS = 1
   }
-
 }

@@ -6,7 +6,7 @@ import com.amazon.deequ.metrics.Metric
 import com.amazon.deequ.repository.{AnalysisResult, AnalysisResultSerde, MetricsRepositoryMultipleResultsLoader}
 import org.apache.spark.sql.SparkSession
 
-class MastroMetricsRepositoryMultipleResultsLoader(session: SparkSession, endpoint: String)
+class MastroMetricsRepositoryMultipleResultsLoader(session: SparkSession, endpoint: String, metricSetInfo : String)
   extends MetricsRepositoryMultipleResultsLoader {
 
   private[this] var tagValues: Option[Map[String, String]] = None
@@ -61,7 +61,7 @@ class MastroMetricsRepositoryMultipleResultsLoader(session: SparkSession, endpoi
     // 1. load results from repository
     val results = MastroMetricsRepository
       // query mastro at endpoint, using specified tagValues
-      .getFromMastro(session, endpoint, tagValues)
+      .getFromMastro(session, endpoint, metricSetInfo, tagValues)
       // deserialize content from string result
       .map{ content =>
         //AnalysisResultSerde.deserialize(content)

@@ -7,7 +7,7 @@ import com.amazon.deequ.repository.MetricsRepository
 import com.amazon.deequ.repository.mastro.MastroMetricsRepository
 import com.amazon.deequ.repository.querable.QuerableMetricsRepository
 import com.github.pilillo.Settings.{ColNames, Formats}
-import com.github.pilillo.commons.Utils
+import com.github.pilillo.commons.{TimeIntervalArguments, Utils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -76,13 +76,18 @@ object Helpers {
    }
   }
 
-  def getRepository(repository : String) : MetricsRepository = {
-   // if a valid url is provided, use the mastro repo - otherwise save to file system
-   if(Utils.urlValidator.isValid(repository)){
-    MastroMetricsRepository(df.sparkSession, endpoint = repository)
-   }else{
-    //FileSystemMetricsRepository(df.sparkSession, metricsRepo)
-    QuerableMetricsRepository(df.sparkSession, path = repository)
+  //def getRepository(repository : String) : MetricsRepository = {
+  def getRepository(arguments : TimeIntervalArguments) : MetricsRepository = {
+   if(arguments.repository == null || arguments.repository.isEmpty) {
+    null
+   }else {
+    // if a valid url is provided, use the mastro repo - otherwise save to file system
+    if(Utils.urlValidator.isValid(arguments.repository)){
+     MastroMetricsRepository(df.sparkSession, endpoint = arguments.repository, metricSetInfo = arguments.metricSetInfo)
+    }else{
+     //FileSystemMetricsRepository(df.sparkSession, metricsRepo)
+     QuerableMetricsRepository(df.sparkSession, path = arguments.repository)
+    }
    }
   }
  }
