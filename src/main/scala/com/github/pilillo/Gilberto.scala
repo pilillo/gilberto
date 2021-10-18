@@ -59,7 +59,7 @@ object Gilberto {
       sys.exit(4)
     }
     log.info(s"Running ${arguments.get.action}")
-    val spark: SparkSession = SparkJob.get(s"Gilberto-${args(0)}")
+    val spark: SparkSession = SparkJob.get(s"Gilberto-${arguments.get.action}")
     // assuming either Hive tables or paths
     val df = if( spark.catalog.tableExists(arguments.get.source))
       spark.table(arguments.get.source)
