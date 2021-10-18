@@ -13,6 +13,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "io.lemonlabs" %% "scala-uri" % "1.4.10",
+
   "com.github.scopt" %% "scopt" % "3.7.1",
   "org.scalacheck" %% "scalacheck" % "1.14.1" % "test",
 

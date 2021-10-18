@@ -3,18 +3,14 @@ package com.amazon.deequ.repository.mastro
 import com.amazon.deequ.analyzers.runners.AnalyzerContext
 import com.amazon.deequ.analyzers.{Analyzer, State}
 import com.amazon.deequ.metrics.{Distribution, Metric}
-import com.amazon.deequ.repository.JsonSerializationConstants.{ANALYZER_CONTEXT_FIELD, RESULT_KEY_FIELD, TAGS_FIELD}
 import com.amazon.deequ.repository._
-import com.google.gson.reflect.TypeToken
 import com.google.gson._
+import com.google.gson.reflect.TypeToken
 
 import java.lang.reflect.Type
-import scala.collection._
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 import java.util.{ArrayList => JArrayList, HashMap => JHashMap, List => JList, Map => JMap}
-
-
+import scala.collection.JavaConverters._
+import scala.collection._
 
 case class MetricSet(name : String,
                      version : String,
