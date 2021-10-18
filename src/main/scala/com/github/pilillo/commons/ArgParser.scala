@@ -1,7 +1,7 @@
 package com.github.pilillo.commons;
 
-object TimeInterval {
-    val parser = new scopt.OptionParser[TimeIntervalArguments](getClass.getName){
+object ArgParser {
+    val parser = new scopt.OptionParser[Arguments](getClass.getName){
 
         // action to run
         opt[String]('a', "action")
@@ -64,5 +64,5 @@ object TimeInterval {
           .action((x, c) => c.copy(partitionBy = x))
           .text("Columns to use to partition the resulting dataframe")
     }
-    def parse(args : Array[String]) : Option[TimeIntervalArguments] = parser.parse(args, TimeIntervalArguments())
+    def parse(args : Array[String]) : Option[Arguments] = parser.parse(args, Arguments())
 }

@@ -2,7 +2,7 @@ package com.github.pilillo.pipelines
 
 import com.amazon.deequ.suggestions.{ConstraintSuggestionRunner, Rules}
 import com.github.pilillo.Settings.{ColNames, Configs}
-import com.github.pilillo.commons.TimeIntervalArguments
+import com.github.pilillo.commons.Arguments
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
