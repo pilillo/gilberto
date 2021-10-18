@@ -94,13 +94,8 @@ object Gilberto {
               5
             }else{
               val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
-
-              val repo = if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
-                null
-              }else {
-                df.getRepository(arguments.get.repository)
-              }
-              df.validate(codeConfig, repo, getResultKey(arguments.get))
+              // the repo is optional for validate checks
+              df.validate(codeConfig, df.getRepository(arguments.get), getResultKey(arguments.get))
             }
           }
           case "detect" => {
@@ -109,11 +104,12 @@ object Gilberto {
               5
             }else{
               val codeConfig = df.loadCodeConfig(arguments.get.codeConfigPath)
+              // the repo is mandatory for detect anomalies
               if(arguments.get.repository == null || arguments.get.repository.isEmpty) {
                 log.error("No repository specified")
                 5
               }else{
-                df.detect(codeConfig, df.getRepository(arguments.get.repository), getResultKey(arguments.get))
+                df.detect(codeConfig, df.getRepository(arguments.get), getResultKey(arguments.get))
               }
             }
           }
@@ -126,5 +122,4 @@ object Gilberto {
     }
     if (exitCode != 0) sys.exit(exitCode)
   }
-
 }
